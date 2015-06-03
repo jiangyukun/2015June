@@ -1,25 +1,21 @@
 package me.jiangyu.june.app;
 
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.ByteArrayHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.web.servlet.ViewResolver;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.ViewResolverRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
-import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
-import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
 
 import java.util.Collections;
 import java.util.List;
 
 /**
- * Created by jiangyukun on 15/6/3.
+ * by jiangyukun on 15/6/3.
  */
 @Configuration
 @EnableWebMvc
@@ -43,14 +39,4 @@ public class WebMvcConfig extends WebMvcConfigurerAdapter {
         mappingJackson2HttpMessageConverter.setSupportedMediaTypes(Collections.singletonList(MediaType.APPLICATION_JSON));
     }
 
-    @Bean
-    public RequestMappingHandlerMapping handlerMapping() {
-        RequestMappingHandlerMapping handlerMapping = new RequestMappingHandlerMapping();
-        return handlerMapping;
-    }
-
-    @Bean
-    public RequestMappingHandlerAdapter handlerAdapter() {
-        return new RequestMappingHandlerAdapter();
-    }
 }
