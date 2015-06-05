@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head lang="zh">
+    <base href="../">
+    <meta charset="UTF-8">
+    <title></title>
+    <link href="res/css/bootstrap/bootstrap.css" type="text/css" rel="stylesheet"/>
+    <link href="res/css/chosen.min.css" type="text/css" rel="stylesheet"/>
+    <link href="res/css/jstree/style.css" type="text/css" rel="stylesheet"/>
+    <script data-main="html/js/app" src="res/js/require.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        ul {
+            list-style-type: none;
+        }
+
+        li {
+            margin-top: 5px;
+            margin-left: 5px;
+            display: inline-block;
+            white-space: nowrap;
+        }
+
+        #resultNodes {
+            width: 300px;
+            min-height: 30px;
+            border: 1px solid #aaa;
+        }
+
+        #resultNodes li input {
+            margin-left: 5px;
+            border: none;
+            outline: none;
+        }
+
+        .search-choice {
+            background: #EEE;
+            border: 1px solid #000;
+        }
+
+        .icon_org, .close_icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-top: 0;
+            background-image: url(res/images/img.png);
+        }
+
+        .icon_org {
+            margin-top: 3px;
+            background-position: -532px -154px;
+        }
+
+        .close_icon {
+            margin-top: 3px;
+            background-position: -532px -246px;
+        }
+
+        #treeContainer, #jstree {
+            display: inline-block;
+        }
+
+        #jstree {
+            border: 1px solid #aaa;
+            width: 300px
+        }
+    </style>
+</head>
+<body>
+
+<div id="treeContainer">
+    <ul id="resultNodes"></ul>
+    <div id="jstree"></div>
+</div>
+<script id="dropdown-result" type="text/html">
+    <li class="search-choice">
+        <i class="icon_org"></i>
+        <span data-val="{{id}}">{{text}}</span>
+        <i class="close_icon"></i>
+    </li>
+</script>
+<script id="dropdown-input" type="text/html">
+    <li id="dropdown-result-input">
+        <input id="selectNodes" style="width: 120px"/>
+    </li>
+</script>
+</body>
+</html>

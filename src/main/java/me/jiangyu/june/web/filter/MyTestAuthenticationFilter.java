@@ -29,7 +29,7 @@ public class MyTestAuthenticationFilter extends OncePerRequestFilter {
         Authentication authentication = new UsernamePasswordAuthenticationToken("test", "vvvv",
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN")));
         authentication.setAuthenticated(false);
-        logger.debug(Boolean.toString(authentication.isAuthenticated()));
+//        logger.debug(Boolean.toString(authentication.isAuthenticated()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
         filterChain.doFilter(request, response);
     }
