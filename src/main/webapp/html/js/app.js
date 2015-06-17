@@ -19,7 +19,7 @@ requirejs.config({
     }
 });
 
-requirejs(['jquery', 'underscore', 'bootstrap', 'chosen', 'jstree'], function ($, _) {
+requirejs(['jquery', 'underscore', 'bootstrap', 'jstree'], function ($, _) {
     _.templateSettings = {
         interpolate: /{{(.+?)}}/g
     };
@@ -68,7 +68,7 @@ requirejs(['jquery', 'underscore', 'bootstrap', 'chosen', 'jstree'], function ($
     var $treeContainer = $('#treeContainer');
     $resultNodes.append(inputStr);
 
-    $treeContainer.click(function ($event) {
+    $treeContainer.click(function () {
         $('#selectNodes').focus();
         return false;
     });
