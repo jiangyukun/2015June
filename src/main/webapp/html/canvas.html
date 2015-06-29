@@ -13,11 +13,17 @@
 <canvas id="canvasTest" width="500px" height="500px"></canvas>
 </body>
 <script>
-    var i, count = 3, startRad = 0, centerX = 200, centerY = 200, radius = 50, lineLength = 100;
+    var runFlag = true;
+    var i, count = 5, startRad = 0, centerX = 150, centerY = 200, radius = 50, lineLength = 120;
     var canvas = document.getElementById('canvasTest');
+    canvas.onclick = function (e) {
+        console.log(e);
+        runFlag = !runFlag;
+    };
     var context = canvas.getContext('2d');
 
     setInterval(function () {
+        if (!runFlag) return;
         context.clearRect(0, 0, 500, 500);
         context.beginPath();
         context.arc(centerX, centerY, radius, 0, 2 * Math.PI, true);
