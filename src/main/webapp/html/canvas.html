@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <style>
+        canvas {
+            border: 1px solid #aaa;
+        }
+    </style>
+</head>
+<body>
+<canvas id="canvasTest" width="500px" height="500px"></canvas>
+</body>
+<script>
+    var i, count = 3, startRad = 0, centerX = 200, centerY = 200, radius = 50, lineLength = 100;
+    var canvas = document.getElementById('canvasTest');
+    var context = canvas.getContext('2d');
+
+    setInterval(function () {
+        context.clearRect(0, 0, 500, 500);
+        context.beginPath();
+        context.arc(centerX, centerY, radius, 0, 2 * Math.PI, true);
+        context.fillStyle = 'rgba(175, 100, 175, 0.2)';
+        context.fill();
+        context.strokeStyle = 'rgba(175, 100, 175, 0.5)';
+        context.stroke();
+
+        for (i = 1; i <= count; i++) {
+            var rad = 2.0 * Math.PI * i / count + startRad / 10 / (2.0 * Math.PI);
+            var deltaX = centerX + Math.cos(rad) * lineLength;
+            var deltaY = centerY + Math.sin(rad) * lineLength;
+
+            context.beginPath();
+            context.moveTo(centerX, centerY);
+            context.lineTo(deltaX, deltaY);
+            context.stroke();
+
+            context.beginPath();
+            context.arc(deltaX, deltaY, radius / 2, 0, 2 * Math.PI, true);
+            context.fill();
+            context.stroke();
+        }
+        context.beginPath();
+        context.rect(350, 150, 120, 120);
+        context.fill();
+        context.stroke();
+        startRad++;
+    }, 1000 / 60);
+
+    /*
+     */
+</script>
+</html>
