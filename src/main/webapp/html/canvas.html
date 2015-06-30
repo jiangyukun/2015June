@@ -2,59 +2,151 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title></title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
         canvas {
             border: 1px solid #aaa;
         }
     </style>
 </head>
 <body>
-<canvas id="canvasTest" width="500px" height="500px"></canvas>
+<canvas id="canvasTest" width="350px" height="350"></canvas>
 </body>
 <script>
-    var runFlag = true;
-    var i, count = 5, startRad = 0, centerX = 150, centerY = 200, radius = 50, lineLength = 120;
-    var canvas = document.getElementById('canvasTest');
-    canvas.onclick = function (e) {
-        console.log(e);
-        runFlag = !runFlag;
-    };
-    var context = canvas.getContext('2d');
+    +function () {
+        'use strict';
 
-    setInterval(function () {
-        if (!runFlag) return;
-        context.clearRect(0, 0, 500, 500);
-        context.beginPath();
-        context.arc(centerX, centerY, radius, 0, 2 * Math.PI, true);
-        context.fillStyle = 'rgba(175, 100, 175, 0.2)';
-        context.fill();
-        context.strokeStyle = 'rgba(175, 100, 175, 0.5)';
-        context.stroke();
+        var canvas = document.getElementById('canvasTest');
+        var context = canvas.getContext('2d');
 
-        for (i = 1; i <= count; i++) {
-            var rad = 2.0 * Math.PI * i / count + startRad / 10 / (2.0 * Math.PI);
-            var deltaX = centerX + Math.cos(rad) * lineLength;
-            var deltaY = centerY + Math.sin(rad) * lineLength;
+        var DIRECTION_CLOCK_WISE = '1', //顺时针
+                DIRECTION_ANTI_CLOCK_WISE = '2'; // 逆时针
+        var i, runFlag = true, // 是否停止
+                CIRCLE_RAD = 2 * Math.PI, // 圆的弧度
+                rotateDirection = DIRECTION_ANTI_CLOCK_WISE; // 默认为顺时针旋转
+        var count = 150, // 好友数量
+                lineLength = 80,
+                canvasWidth = 350, canvasHeight = 350, //canvas大小
+                selfRadius = 30, // 自身半径（最大的圆）
+                friendRadius = Math.sin(CIRCLE_RAD / count / 4) * lineLength, // 朋友的半径（最小的圆）
+                friendMainRadius = selfRadius * 2 / 3; // 当前朋友的半径（比最大的圆小一点）
 
+        var startRad = 0, centerX = lineLength + friendMainRadius * 2, centerY = canvasHeight / 2;
+        var friendInfoRectWidth = 90, friendInfoRectHeight = 90;
+        canvas.onclick = function () {
+            runFlag = true;
+        };
+
+        var beforeIndex = 1;
+        var positionList;
+        setInterval(function () {
+            if (!runFlag) {
+                drawFriendAss(positionList[beforeIndex % count]);
+                return;
+            }
+            context.clearRect(0, 0, canvasWidth, canvasHeight);
+            drawFriendInfo();
             context.beginPath();
-            context.moveTo(centerX, centerY);
-            context.lineTo(deltaX, deltaY);
+            context.arc(centerX, centerY, selfRadius, 0, CIRCLE_RAD, true);
+            context.fillStyle = 'rgba(175, 100, 175, 0.2)';
+            context.fill();
+            context.strokeStyle = 'rgba(175, 100, 175, 0.9)';
             context.stroke();
 
+            var targetFriendRad, friendToShowIndex, deltaRad = (startRad / 10 / CIRCLE_RAD) % CIRCLE_RAD;
+            if (rotateDirection == DIRECTION_CLOCK_WISE) {
+                deltaRad = -deltaRad;
+            }
+            positionList = [];
+            for (i = 1; i <= count; i++) {
+                var assLineLength = lineLength;
+//                var rad = (CIRCLE_RAD * (i - 1) / count + deltaRad + CIRCLE_RAD) % CIRCLE_RAD;
+                var rad = ((CIRCLE_RAD - 2 * 0.3) * (i - 1) / count + deltaRad + CIRCLE_RAD) % CIRCLE_RAD;
+                if (i != 1) {
+                    rad += 0.3;
+                }
+                var radSinVal = Math.sin(rad), radCosVal = Math.cos(rad);
+                if (typeof targetFriendRad != 'number') {
+                    targetFriendRad = rad;
+                    friendToShowIndex = i;
+                } else {
+                    if (rotateDirection == DIRECTION_ANTI_CLOCK_WISE) {
+                        if (targetFriendRad < rad) {
+                            targetFriendRad = rad;
+                            friendToShowIndex = i;
+                        }
+                    } else if (rotateDirection == DIRECTION_CLOCK_WISE) {
+                        if (targetFriendRad > rad) {
+                            targetFriendRad = rad;
+                            friendToShowIndex = i;
+                        }
+                    }
+                }
+                var position = {
+                    i: i,
+                    lineLength: assLineLength,
+                    radSinVal: radSinVal,
+                    radCosVal: radCosVal,
+                    centerX: centerX,
+                    centerY: centerY,
+                    radius: friendRadius
+                };
+                positionList.push(position);
+            }
+            for (i = 0; i < positionList.length; i++) {
+                if (i != friendToShowIndex) {
+                    drawFriendAss(positionList[i]);
+                }
+            }
+            startRad++;
+            console.log(friendToShowIndex);
+            if (!beforeIndex || beforeIndex != friendToShowIndex) {
+                var targetIndex = positionList[friendToShowIndex % count];
+                targetIndex.lineLength *= 1.3;
+                targetIndex.radius = friendMainRadius;
+                runFlag = false;
+            }
+            beforeIndex = friendToShowIndex;
+        }, 1000 / 60);
+        function drawFriendInfo() {
             context.beginPath();
-            context.arc(deltaX, deltaY, radius / 2, 0, 2 * Math.PI, true);
+            context.moveTo(centerX, centerY);
+            context.lineTo(canvasWidth, centerY);
+            context.fillStyle = 'rgba(100, 100, 100, 0.9)';
+            context.stroke();
+        }
+
+        function drawFriendLine(position) {
+            context.beginPath();
+            context.moveTo(position.centerX, position.centerY);
+            context.lineTo(position.centerX + position.radCosVal * position.lineLength, position.centerY - position.radSinVal * position.lineLength);
+            context.stroke();
+            context.beginPath();
+            context.rect(canvasWidth - friendInfoRectWidth, (canvasHeight - friendInfoRectHeight) / 2, friendInfoRectWidth, friendInfoRectHeight);
             context.fill();
             context.stroke();
         }
-        context.beginPath();
-        context.rect(350, 150, 120, 120);
-        context.fill();
-        context.stroke();
-        startRad++;
-    }, 1000 / 60);
 
-    /*
-     */
+        function drawFriendAss(position) {
+            drawFriendLine(position);
+            context.save();
+            context.beginPath();
+            context.fillStyle = 'rgba(0, 0, 0, 1)';
+            context.fillText(position.i, position.centerX + position.radCosVal * position.lineLength * 1.4, position.centerY - position.radSinVal * position.lineLength * 1.4);
+            context.restore();
+
+            context.beginPath();
+            context.fillStyle = 'rgba(175, 100, 175, 0.2)';
+            context.arc(position.centerX + position.radCosVal * position.lineLength, position.centerY - position.radSinVal * position.lineLength, position.radius, 0, CIRCLE_RAD, true);
+            context.fill();
+            context.stroke();
+        }
+    }();
 </script>
 </html>
