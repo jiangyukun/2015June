@@ -28,9 +28,11 @@
         var DIRECTION_CLOCK_WISE = '1', //顺时针
                 DIRECTION_ANTI_CLOCK_WISE = '2'; // 逆时针
         var i, runFlag = true, // 是否停止
+                cycleFlag = false,
                 CIRCLE_RAD = 2 * Math.PI, // 圆的弧度
-                rotateDirection = DIRECTION_ANTI_CLOCK_WISE; // 默认为顺时针旋转
-        var count = 150, // 好友数量
+                X_AXIS_SIDE_RAD = 1,
+                rotateDirection = DIRECTION_CLOCK_WISE; // 默认为顺时针旋转
+        var count = 30, // 好友数量
                 lineLength = 80,
                 canvasWidth = 350, canvasHeight = 350, //canvas大小
                 selfRadius = 30, // 自身半径（最大的圆）
@@ -43,21 +45,16 @@
             runFlag = true;
         };
 
-        var beforeIndex = 1;
+        var beforeIndex = count - 1, currentIndex = 1;
         var positionList;
         setInterval(function () {
             if (!runFlag) {
-                drawFriendAss(positionList[beforeIndex % count]);
+                drawFriendAss(positionList[beforeIndex]);
                 return;
             }
-            context.clearRect(0, 0, canvasWidth, canvasHeight);
+            initCanvas();
+            drawSelf();
             drawFriendInfo();
-            context.beginPath();
-            context.arc(centerX, centerY, selfRadius, 0, CIRCLE_RAD, true);
-            context.fillStyle = 'rgba(175, 100, 175, 0.2)';
-            context.fill();
-            context.strokeStyle = 'rgba(175, 100, 175, 0.9)';
-            context.stroke();
 
             var targetFriendRad, friendToShowIndex, deltaRad = (startRad / 10 / CIRCLE_RAD) % CIRCLE_RAD;
             if (rotateDirection == DIRECTION_CLOCK_WISE) {
@@ -66,22 +63,27 @@
             positionList = [];
             for (i = 1; i <= count; i++) {
                 var assLineLength = lineLength;
-//                var rad = (CIRCLE_RAD * (i - 1) / count + deltaRad + CIRCLE_RAD) % CIRCLE_RAD;
-                var rad = ((CIRCLE_RAD - 2 * 0.3) * (i - 1) / count + deltaRad + CIRCLE_RAD) % CIRCLE_RAD;
-                if (i != 1) {
-                    rad += 0.3;
-                }
+                var rad = (CIRCLE_RAD) * (i - 1) / count + deltaRad;
+                /*
+                 var rad = (CIRCLE_RAD - 2 * X_AXIS_SIDE_RAD) * (i - 1) / count + deltaRad;
+                 if (i > currentIndex) {
+                 rad += X_AXIS_SIDE_RAD;
+                 } else if (i < currentIndex) {
+                 rad -= X_AXIS_SIDE_RAD;
+                 }
+                 */
+                rad = (rad + CIRCLE_RAD) % CIRCLE_RAD;
                 var radSinVal = Math.sin(rad), radCosVal = Math.cos(rad);
                 if (typeof targetFriendRad != 'number') {
                     targetFriendRad = rad;
                     friendToShowIndex = i;
                 } else {
-                    if (rotateDirection == DIRECTION_ANTI_CLOCK_WISE) {
+                    if (rotateDirection == DIRECTION_ANTI_CLOCK_WISE) { // 最大弧度
                         if (targetFriendRad < rad) {
                             targetFriendRad = rad;
                             friendToShowIndex = i;
                         }
-                    } else if (rotateDirection == DIRECTION_CLOCK_WISE) {
+                    } else if (rotateDirection == DIRECTION_CLOCK_WISE) { // 最小弧度
                         if (targetFriendRad > rad) {
                             targetFriendRad = rad;
                             friendToShowIndex = i;
@@ -98,22 +100,42 @@
                     radius: friendRadius
                 };
                 positionList.push(position);
+            }// end for
+            currentIndex = friendToShowIndex;
+            if (rotateDirection == DIRECTION_CLOCK_WISE) {
+                friendToShowIndex = (friendToShowIndex - 2 + count) % count;
+            } else {
+                friendToShowIndex = friendToShowIndex % count;
             }
             for (i = 0; i < positionList.length; i++) {
+                drawFriendAss(positionList[i]);
                 if (i != friendToShowIndex) {
-                    drawFriendAss(positionList[i]);
                 }
             }
-            startRad++;
-            console.log(friendToShowIndex);
-            if (!beforeIndex || beforeIndex != friendToShowIndex) {
-                var targetIndex = positionList[friendToShowIndex % count];
-                targetIndex.lineLength *= 1.3;
+//            console.log('beforeIndex ' + beforeIndex + ', friendToShowIndex ' + friendToShowIndex);
+            if (beforeIndex != friendToShowIndex) {
+                var targetIndex = positionList[friendToShowIndex];
+//                targetIndex.lineLength *= 1.3;
                 targetIndex.radius = friendMainRadius;
                 runFlag = false;
             }
             beforeIndex = friendToShowIndex;
+            startRad++;
         }, 1000 / 60);
+
+        function initCanvas() {
+            context.clearRect(0, 0, canvasWidth, canvasHeight);
+        }
+
+        function drawSelf() {
+            context.beginPath();
+            context.arc(centerX, centerY, selfRadius, 0, CIRCLE_RAD, true);
+            context.fillStyle = 'rgba(175, 100, 175, 0.2)';
+            context.fill();
+            context.strokeStyle = 'rgba(175, 100, 175, 0.9)';
+            context.stroke();
+        }
+
         function drawFriendInfo() {
             context.beginPath();
             context.moveTo(centerX, centerY);
