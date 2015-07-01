@@ -37,7 +37,7 @@
         var height = Math.ceil(zr.getHeight());
         var i, n = 10, A = 2 * Math.PI / n, r = 150;
 
-        var lines = {}, fCricles = {};
+        var lines = [], fCricles = [];
         var myCircle = new CircleShape({
             zlevel: 1,
             style: {
@@ -48,17 +48,13 @@
                 color: 'rgba(255, 69, 0, 1)',
                 strokeColor: 'rgba(255, 255, 255, 1)',
                 lineWidth: 8,
-                shadowBlur: 20,
+                shadowBlur: 10,
                 shadowColor: 'rgba(255,215,0,0.8)',
                 text: 'me',
                 textPosition: 'inside',
-                textFont: 'normal 18px 寰蒋闆呴粦',
                 textAlign: 'center'
             },
-            clickable: true,
-            onclick: function () {
-                alert('doc/example/demo.html')
-            }
+            clickable: true
         });
         for (i = 0; i < n; i++) {
             lines[i] = new LineShape({
@@ -87,16 +83,30 @@
                     color: 'rgba(255, 69, 0, 1)',
                     strokeColor: color.getColor(colorIdx++),
                     lineWidth: 8,
-                    shadowBlur: 20,
+                    shadowBlur: 10,
                     shadowColor: 'rgba(255,215,0,0.8)',
                     text: i + 1,
                     textPosition: 'inside',
-                    textFont: 'normal 18px 寰蒋闆呴粦',
                     textAlign: 'center'
                 },
+                _c: 1,
                 clickable: true,
                 onclick: function () {
-                    Click();
+                    for (i = 0; i < n; i++) {
+                        var c = fCricles[i];
+                        zr.animate(fCricles[i].id)
+                                .when(1000, {
+                                    rotation: [A * c._c, width / 2, height / 2]
+                                })
+                                .start();
+                        zr.animate(lines[i].id)
+                                .when(1000, {
+                                    rotation: [A * c._c, width / 2, height / 2]
+                                })
+                                .start();
+                        c._c++;
+                    }
+                    zr.refresh();
                 }
             });
         }
@@ -106,20 +116,7 @@
             zr.addShape(fCricles[i]);
         }
         zr.render();
-        function Click() {
-            for (i = 0; i < n; i++) {
-                zr.animate(fCricles[i].id)
-                        .when(1000, {
-                            rotation: [A * 2, width / 2, height / 2]
-                        })
-                        .start();
-                zr.animate(lines[i].id)
-                        .when(1000, {
-                            rotation: [A * 2, width / 2, height / 2]
-                        })
-                        .start();
-            }
-        }
+
     });
 </script>
 </body>
