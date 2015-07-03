@@ -16,21 +16,22 @@
         }
 
         #face {
-            border: 1px solid #aaa;
-            width: 350px;
+            /*border: 1px solid #aaa;*/
+            border-bottom: 1px solid #aaa;
+            width: 100%;
             height: 350px;
-            background-color: rgb(35, 45, 55);
         }
     </style>
 </head>
 
 <body>
 <div id='face'></div>
-<button id="btn">CLICK</button>
 
 <script src="doc/asset/js/jquery.js"></script>
 <script>
     +function () {
+        'use strict';
+
         require.config({
             packages: [
                 {
@@ -41,33 +42,51 @@
             ]
         });
 
-        var zr, LineShape, CircleShape, DropletShape, RectangleSharp;
+        var zr, LineShape, CircleShape, DropletShape, RectangleShape, CellularShape, DoubleArcAroundShape;
         var width, height;
         var CIRCLE_RAD = 2 * Math.PI;
+        var clickFlag = true;
+        var selfColor = '#5CB3C2', friendColor = '#D28954', friendMainColor = '#49B5FF';
         require([
             'zrender',
             'zrender/shape/Line',
             'zrender/shape/Circle',
             'zrender/shape/Rectangle',
-            'zrender/shape/Droplet'
+            'zrender/shape/Droplet',
+            'zrender/shape/Cellular',
+            'zrender/shape/DoubleArcAround'
         ], function (zrender) {
             LineShape = require('zrender/shape/Line');
             CircleShape = require('zrender/shape/Circle');
             DropletShape = require('zrender/shape/Droplet');
-            RectangleSharp = require('zrender/shape/Rectangle');
+            RectangleShape = require('zrender/shape/Rectangle');
+            CellularShape = require('zrender/shape/Cellular');
+            DoubleArcAroundShape = require('zrender/shape/DoubleArcAround');
             zr = zrender.init(document.getElementById('face'));
             width = Math.ceil(zr.getWidth());
             height = Math.ceil(zr.getHeight());
-            renderCanvas(zrender, {name: 'self', count: 10, data: []});
+            renderCanvas(zrender, {name: 'self', count: 12, data: []}, false, true);
         });
 
-        function renderCanvas(zrender, data) {
-            var i, count = data.count, selfRadius = 30, lineLength = 80, lineLengthStart = 30;
-            var friendRadius = Math.sin(CIRCLE_RAD / count / 3) * lineLength; // 朋友的半径（最小的圆）
-            var angleRad = CIRCLE_RAD / count;
-            var centerX = friendRadius + lineLength, centerY = 2 * friendRadius + lineLength;
+        var i, count, lines, friends, selfRadius = 25, lineLength = 80, lineLengthStart = 30, friendToShowRadius = 20;
+        var friendRadius, angleRad, centerX, centerY;
+        var selfNum = 0;
 
-            var lines = [], friends = [];
+        function renderCanvas(zrender, data, selfClickable, friendClickable) {
+            var num;
+            if (friendClickable) {
+                num = selfNum;
+            } else {
+                num = 0;
+            }
+            lineLengthStart = 30;
+            count = data.count;
+            friendRadius = Math.sin(CIRCLE_RAD / count / 3) * lineLength; // 朋友的半径（最小的圆）
+            angleRad = CIRCLE_RAD / count;
+            centerX = friendRadius + lineLength;
+            centerY = 2 * friendRadius + lineLength;
+            lines = [];
+            friends = [];
             var selfCircle = new CircleShape({
                 zlevel: 3,
                 style: {
@@ -75,11 +94,38 @@
                     y: centerY,
                     r: selfRadius,
                     brushType: 'both',
-                    color: 'rgba(255, 69, 0, 1)',
+                    color: '#D4D4D4',
+                    strokeColor: selfColor,
+                    lineWidth: 5,
                     text: data.name,
                     textPosition: 'inside',
                     textFont: 'normal 14px 微软雅黑',
                     textAlign: 'center'
+                },
+                clickable: selfClickable,
+                onclick: function () {
+                    if (!clickFlag) return;
+                    selfCircle.style.r = friendToShowRadius;
+                    selfCircle.zlevel = 4;
+                    zr.modShape(friendToShowCircle);
+                    zr.refresh();
+                    zr.animate(selfCircle.id)
+                            .when(1000, {
+                                position: [lineLength + friendRadius + 55, 0]
+                            })
+                            .done(function () {
+                                zr.delShape(selfCircle);
+                                for (i = 0; i < count; i++) {
+                                    zr.delShape(lines[i]);
+                                    zr.delShape(friends[i]);
+                                }
+                                zr.delShape(friendInfoArea);
+//                                zr.delShape(droplet);
+                                zr.delShape(friendToShowCircle);
+                                renderCanvas(zrender, {name: 'self', count: 10, data: []}, false, true);
+                            })
+                            .start();
+                    clickFlag = true;
                 }
             });
 
@@ -92,55 +138,59 @@
                         yStart: centerY,
                         xEnd: getX(i),
                         yEnd: getY(i),
-                        strokeColor: 'rgba(255, 255, 255, 1)',
+                        strokeColor: friendColor,
                         lineWidth: 1
                     },
                     hoverable: false
                 });
 
                 friends[i] = new CircleShape({
-                    rotation: [0, getX(i), getY(i)],
+                    rotation: [0, centerX, centerY],
                     zlevel: 1,
                     style: {
                         x: getX(i),
                         y: getY(i),
                         r: getRadius(),
                         brushType: 'both',
-                        color: 'rgba(153, 255, 255, 1)',
-                        lineWidth: 0
+                        color: friendColor,
+                        lineWidth: 0/*,
+                         text: i + 1,
+                         textPosition: 'inside',
+                         textColor: '#000'*/
                     },
                     hoverable: false
                 });
             }
-            var xStart = centerX + lineLength + friendRadius;
-            var yStart = centerY;
-            var droplet = new DropletShape({
-                zlevel: 2,
+
+            var cellular = new CellularShape({
                 style: {
-                    x: xStart,
-                    y: yStart + 55,
-                    a: 26,
-                    b: 60,
-                    brushType: 'both',
-                    color: '#fff',
-                    strokeColor: '#000',
-                    lineWidth: 1
-                },
-                rotation: [CIRCLE_RAD / 4, xStart, yStart],
-                hoverable: false
+                    x: getX(0, lineLength + friendRadius),
+                    y: getY(0, lineLength + friendRadius),
+                    startAngle: CIRCLE_RAD / 24,
+                    endAngle: CIRCLE_RAD * 21 / 24,
+                    colorStyle: friendMainColor,
+                    lineWidth: 1,
+                    count: 5
+                }
             });
+
+            var friendCircleX = getX(0, lineLength * 2 + friendRadius);
+            var friendCircleY = getY(0, lineLength * 2 + friendRadius);
 
             var friendToShowCircle = new CircleShape({
                 zlevel: 3,
                 style: {
-                    x: xStart + 55,
-                    y: yStart,
-                    r: 20,
+                    x: friendCircleX,
+                    y: friendCircleY,
+                    r: friendToShowRadius,
                     brushType: 'both',
-                    color: 'rgba(255, 69, 0, 1)'
+                    color: 'rgba(255, 69, 0, 1)',
+                    text: getNum(),
+                    textPosition: 'inside',
+                    textColor: '#000'
                 },
                 hoverable: false,
-                clickable: true,
+                clickable: friendClickable,
                 onclick: function () {
                     friendToShowCircle.style.r = selfRadius;
                     zr.modShape(friendToShowCircle);
@@ -156,24 +206,33 @@
                                     zr.delShape(friends[i]);
                                 }
                                 zr.delShape(friendInfoArea);
-                                zr.delShape(droplet);
+//                                zr.delShape(droplet);
                                 zr.delShape(friendToShowCircle);
-
-                                renderCanvas(zrender, {name: 'friend', count: 10, data: []});
+                                renderCanvas(zrender, {name: getNum(), count: 15, data: []}, true, false);
                             })
                             .start();
                 }
             });
 
-            var friendInfoArea = new RectangleSharp({
+            var doubleArcAround = new DoubleArcAroundShape({
+                style: {
+                    x: friendCircleX,
+                    y: friendCircleY,
+                    r: friendRadius * 2,
+                    colorStyle: friendMainColor
+                }
+            });
+
+            var friendInfoArea = new RectangleShape({
                 style: {
                     x: 2 * centerX,
-                    y: 1.5 * centerY,
+                    y: centerY,
                     width: 100,
                     height: 100,
                     radius: 5,
-                    color: 'rgb(35, 45, 55)',
-                    text: 'XXX\n阅读总数50人\n被转发数20个',
+                    color: '#fff',
+                    text: '音乐小子\n阅读人数 109\n转发人数 46',
+                    textColor: '#000',
                     textPosition: 'inside'
                 },
                 hoverable: false
@@ -184,14 +243,16 @@
                 zr.addShape(lines[i]);
                 zr.addShape(friends[i]);
             }
-            zr.addShape(friendInfoArea);
+            zr.addShape(cellular);
+            zr.addShape(doubleArcAround);
 
             zr.render(function () {
                 var id = setInterval(function () {
                     if (lineLengthStart == lineLength) {
                         clearInterval(id);
-                        zr.addShape(droplet);
+//                        zr.addShape(droplet);
                         zr.addShape(friendToShowCircle);
+                        zr.addShape(friendInfoArea);
                         return;
                     }
                     lineLengthStart++;
@@ -210,47 +271,77 @@
                     zr.refresh();
                 }, 20);
             });
-            var num = 0;
 
-            $('#btn').click(function () {
-                rotate();
-            });
-
-            function getX(index) {
-                return centerX + lineLengthStart * Math.cos(angleRad * index)
+            function getX(index, length) {
+                return centerX + (length || lineLengthStart) * Math.cos(getAngle(index))
             }
 
-            function getY(index) {
-                return centerY + lineLengthStart * Math.sin(angleRad * index)
+            function getY(index, length) {
+                return centerY - (length || lineLengthStart) * Math.sin(getAngle(index))
             }
 
             function getRadius() {
                 return lineLengthStart * friendRadius / lineLength;
             }
 
+            function getNum() {
+                return -num % count + 1
+            }
+
+            function getAngle(index) {
+                return (index || num) * angleRad + CIRCLE_RAD / 24;
+            }
+
+            function rotateAngele() {
+                return num * angleRad;
+            }
+
             function rotate() {
-                zr.delShape(droplet);
+//                zr.delShape(droplet);
                 zr.delShape(friendToShowCircle);
+                zr.delShape(friendInfoArea);
                 num--;
+                if (friendClickable) {
+                    selfNum = num;
+                }
                 for (i = 0; i < count; i++) {
-                    zr.animate(lines[i].id)
-                            .when(1000, {
-                                rotation: [num * angleRad, centerX, centerY]
-                            })
-                            .done(function () {
-                                if (i == count) {
-                                    zr.addShape(droplet);
-                                    zr.addShape(friendToShowCircle);
-                                }
-                            })
-                            .start();
-                    zr.animate(friends[i].id)
-                            .when(1000, {
-                                rotation: [num * angleRad, centerX, centerY]
-                            })
-                            .start();
+                    friends[i].style.color = friendColor;
+                    zr.modShape(friends[i]);
+                    zr.refresh();
+                    (function (i) {
+                        zr.animate(lines[i].id)
+                                .when(1000, {
+                                    rotation: [rotateAngele(), centerX, centerY]
+                                })
+                                .done(function () {
+                                    if (i == 0) {
+//                                        zr.addShape(droplet);
+                                        friendToShowCircle.style.text = getNum();
+                                        friends[getNum() - 1].style.color = friendMainColor;
+                                        zr.modShape(friends[getNum() - 1]);
+                                        zr.addShape(friendToShowCircle);
+                                        zr.addShape(friendInfoArea);
+                                    }
+                                })
+                                .start();
+                        zr.animate(friends[i].id)
+                                .when(1000, {
+                                    rotation: [rotateAngele(), centerX, centerY]
+                                })
+                                .start();
+                    })(i);
                 }
             }
+
+            $('#face').off().on('touchmove', function () {
+                clickFlag = false;
+                return false;
+            }).on('touchend', function () {
+                if (!clickFlag) {
+                    rotate();
+                }
+                clickFlag = true;
+            });
         }
 
         // end
