@@ -17,14 +17,15 @@ define(
                 var y = style.y;
                 var r = style.r;
                 var colorStyle = style.colorStyle;
+                var initRadian = Math.PI * 2 / 3;
 
                 for (i = 0; i < 2; i++) {
                     ctx.beginPath();
-                    ctx.arc(x, y, r + i, Math.PI / 6, Math.PI * 2 / 3, false);
+                    ctx.arc(x, y, r + i, -(initRadian - Math.PI / 2) - Math.PI / 4, -(initRadian - Math.PI / 2) + Math.PI / 4, false);
                     ctx.strokeStyle = colorStyle;
                     ctx.stroke();
                     ctx.beginPath();
-                    ctx.arc(x, y, r + i, -Math.PI / 3, -Math.PI * 5 / 6, true);
+                    ctx.arc(x, y, r + i, Math.PI * 3 / 2 - initRadian - Math.PI / 4, Math.PI * 3 / 2 - initRadian + Math.PI / 4, false);
                     ctx.strokeStyle = colorStyle;
                     ctx.stroke();
                 }

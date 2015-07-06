@@ -1,16 +1,10 @@
 define(
     function (require) {
 
-        var math = require('../tool/math');
         var computeBoundingBox = require('../tool/computeBoundingBox');
-        var vec2 = require('../tool/vector');
         var Base = require('./Base');
 
-        var min0 = vec2.create();
-        var min1 = vec2.create();
-        var max0 = vec2.create();
-        var max1 = vec2.create();
-
+        var renderCount = 0, animationFlag = true;
         var Cellular = function (options) {
             this.brushTypeOnly = 'stroke';
             Base.call(this, options);
@@ -20,6 +14,9 @@ define(
             type: 'cellular',
 
             buildPath: function (ctx, style) {
+                renderCount++;
+                //animationFlag = (renderCount % 2 != 0);
+                animationFlag = true;
                 var i, j;
                 var x = style.x;
                 var y = style.y;
@@ -54,10 +51,14 @@ define(
                             break;
                     }
                     for (j = 0; j < lineWidth; j++) {
-                        ctx.beginPath();
-                        ctx.arc(x, y, radius + j, startAngle, endAngle, true);
-                        ctx.strokeStyle = colorStyle;
-                        ctx.stroke();
+                        setTimeout(function (r) {
+                            return function () {
+                                ctx.beginPath();
+                                ctx.arc(x, y, r, startAngle, endAngle, true);
+                                ctx.strokeStyle = colorStyle;
+                                ctx.stroke();
+                            };
+                        }(radius + j), animationFlag ? i * 100 : 0);
                     }
                 }
             },
