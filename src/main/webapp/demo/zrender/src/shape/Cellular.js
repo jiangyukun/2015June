@@ -3,8 +3,8 @@ define(
 
         var computeBoundingBox = require('../tool/computeBoundingBox');
         var Base = require('./Base');
+        var PI = Math.PI;
 
-        var renderCount = 0, animationFlag = true;
         var Cellular = function (options) {
             this.brushTypeOnly = 'stroke';
             Base.call(this, options);
@@ -14,52 +14,19 @@ define(
             type: 'cellular',
 
             buildPath: function (ctx, style) {
-                renderCount++;
-                //animationFlag = (renderCount % 2 != 0);
-                animationFlag = true;
                 var i, j;
                 var x = style.x;
                 var y = style.y;
-                var startAngle = style.startAngle;
-                var endAngle = style.endAngle;
-                var lineWidth = 1;
-                var count = style.count;
+                var angle = 2 * PI - style.angle;
+                var borderWidth = style.borderWidth;
                 var colorStyle = style.colorStyle;
-                var radius = 10;
+                var radius = style.radius;
 
-                for (i = 1; i <= count; i++) {
-                    switch (i) {
-                        case 1:
-                            radius = 10;
-                            lineWidth = 1;
-                            break;
-                        case 2:
-                            radius = 15;
-                            lineWidth = 2;
-                            break;
-                        case 3:
-                            radius = 21;
-                            lineWidth = 3;
-                            break;
-                        case 4:
-                            radius = 28;
-                            lineWidth = 3;
-                            break;
-                        case 5:
-                            radius = 35;
-                            lineWidth = 4;
-                            break;
-                    }
-                    for (j = 0; j < lineWidth; j++) {
-                        setTimeout(function (r) {
-                            return function () {
-                                ctx.beginPath();
-                                ctx.arc(x, y, r, startAngle, endAngle, true);
-                                ctx.strokeStyle = colorStyle;
-                                ctx.stroke();
-                            };
-                        }(radius + j), animationFlag ? i * 100 : 0);
-                    }
+                for (j = 0; j < borderWidth; j++) {
+                    ctx.beginPath();
+                    ctx.arc(x, y, radius + j, angle + PI / 6, angle - PI / 6, true);
+                    ctx.strokeStyle = colorStyle;
+                    ctx.stroke();
                 }
             },
             getRect: function (style) {
