@@ -20,7 +20,6 @@
 </head>
 <body>
 <div id='face'></div>
-<button id="rotate">rotate</button>
 <script src="doc/asset/js/jquery.js"></script>
 <script>
     function Range(start, end) {
@@ -482,10 +481,6 @@
                 } else {
                     rotate(pointToLineDistance < 0 ? BOUNCE_CLOCK_WISE : BOUNCE_ANTI_CLOCK_WISE);
                 }
-            });
-
-            $('#rotate').off().click(function () {
-                rotate();
             });
 
             function getRadius() {
