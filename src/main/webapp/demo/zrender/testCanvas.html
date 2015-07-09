@@ -22,14 +22,14 @@
         var width = canvas.width, height = canvas.height;
         var ctx = canvas.getContext('2d');
 
-        for (i = 0; i < width; i += 50) {
+        for (i = 0; i < width; i += 100) {
             ctx.beginPath();
             ctx.moveTo(i, 0);
             ctx.lineTo(i, height);
             ctx.stroke();
         }
 
-        for (i = 0; i < height; i += 50) {
+        for (i = 0; i < height; i += 100) {
             ctx.beginPath();
             ctx.moveTo(0, i);
             ctx.lineTo(width, i);
@@ -40,6 +40,15 @@
         ctx.moveTo(50, 50);
         ctx.quadraticCurveTo(90, 50, 100, 100);
         ctx.stroke();
+
+        ctx.beginPath();
+        ctx.save();
+        ctx.arc(200, 200, 50, 0, Math.PI * 2, true);
+        ctx.clip();
+        ctx.beginPath();
+        ctx.rect(100, 100, 200, 200);
+        ctx.fill();
+        ctx.restore();
     }();
 
 </script>

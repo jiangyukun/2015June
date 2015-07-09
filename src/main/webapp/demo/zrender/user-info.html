@@ -60,16 +60,21 @@
 
         var CIRCLE_RAD = 2 * Math.PI;
         var CLOCK_WISE = 1, ANTI_CLOCK_WISE = -1, BOUNCE = 2, BOUNCE_CLOCK_WISE = 3, BOUNCE_ANTI_CLOCK_WISE = 4;
-        var zr, LineShape, CircleShape, CellularShape, DoubleArcAroundShape, TextShape, ImageShape;
+        var zr, Group, LineShape, CircleShape, CellularShape, DoubleArcAroundShape, TextShape, ImageShape, CircleImageShape;
         var width, height;
         var selfColor = 'rgba(92,187,255,0.8)', friendColor = 'rgba(220,161,119,0.8)', lineColor = 'rgba(220,161,119,0.3)', friendMainColor = '#49B5FF';
-        var i, count, lines, friends, cellular, cellulars, selfRadius = 25, lineLength, friendToShowRadius = 30;
+        var i, count, lines, friends, friendImages, currentFriendShape, cellular, cellulars, selfRadius = 25, lineLength, friendToShowRadius = 30;
         var friendRadius, angleRad, centerX, centerY;
         var selfNum = 0;
         var initRadian = CIRCLE_RAD / 3;
         var rotateFlag, friendAnimationId, friendAnimationStop = false;
+        var config = {
+            maxImageFriendCount: 10,
+            count: 10
+        };
         require([
             'zrender',
+            'zrender/Group',
             'zrender/shape/Line',
             'zrender/shape/Circle',
             'zrender/shape/Rectangle',
@@ -77,19 +82,22 @@
             'zrender/shape/Cellular',
             'zrender/shape/DoubleArcAround',
             'zrender/shape/Text',
-            'zrender/shape/Image'
+            'zrender/shape/Image',
+            'zrender/shape/CircleImage'
         ], function (zrender) {
+            Group = require('zrender/Group');
             LineShape = require('zrender/shape/Line');
             CircleShape = require('zrender/shape/Circle');
             CellularShape = require('zrender/shape/Cellular');
             DoubleArcAroundShape = require('zrender/shape/DoubleArcAround');
             TextShape = require('zrender/shape/Text');
             ImageShape = require('zrender/shape/Image');
+            CircleImageShape = require('zrender/shape/CircleImage');
             zr = zrender.init(document.getElementById('face'));
             width = Math.ceil(zr.getWidth());
             height = Math.ceil(zr.getHeight());
             lineLength = parseInt(width / 4 < 80 ? width / 4 : 80);
-            renderCanvas(zrender, {name: 'self', count: 100, data: []}, false, true);
+            renderCanvas(zrender, {name: 'self', count: config.count, data: []}, false, true);
         });
 
         function renderCanvas(zrender, data, selfClickable, friendClickable) {
@@ -107,7 +115,18 @@
             lines = [];
             friends = [];
             cellulars = [];
-            var selfCircle = new ImageShape({
+            friendImages = [];
+
+            var selfCircleGroup = new Group();
+            selfCircleGroup.clipShape = {
+                buildPath: function (ctx) {
+                    ctx.arc(centerX, centerY, selfRadius, 0, Math.PI * 2, true);
+                },
+                updateTransform: function () {
+                },
+                needTransform: true
+            };
+            selfCircleGroup.addChild(new ImageShape({
                 zlevel: 1,
                 style: {
                     x: centerX - selfRadius,
@@ -118,10 +137,10 @@
                 },
                 clickable: selfClickable,
                 onclick: selfClick
-            });
+            }));
 
             var selfCircleAround = new CircleShape({
-                zlevel: 2,
+                zlevel: 0,
                 style: {
                     x: centerX,
                     y: centerY,
@@ -129,7 +148,8 @@
                     brushType: 'stroke',
                     strokeColor: selfColor,
                     lineWidth: 4
-                }
+                },
+                hoverable: false
             });
 
             for (i = 0; i < count; i++) {
@@ -178,19 +198,27 @@
             var friendCircleX = getFriendMainPositionX();
             var friendCircleY = getFriendMainPositionY();
 
-            var friendToShowCircle = new ImageShape({
+            var friendToShowCircle = new Group();
+            selfCircleGroup.clipShape = {
+                buildPath: function (ctx) {
+                    ctx.arc(friendCircleX, friendCircleY, friendToShowRadius, 0, Math.PI * 2, true);
+                },
+                updateTransform: function () {
+                }
+            };
+            selfCircleGroup.addChild(new ImageShape({
                 zlevel: 3,
                 style: {
                     x: friendCircleX - friendToShowRadius,
                     y: friendCircleY - friendToShowRadius,
                     width: 2 * friendToShowRadius,
                     height: 2 * friendToShowRadius,
-                    image: "head1.png"
+                    image: "64_1.jpg"
                 },
                 hoverable: false,
                 clickable: friendClickable,
                 onclick: friendClick
-            });
+            }));
 
             var doubleArcAround = new DoubleArcAroundShape({
                 style: {
@@ -247,7 +275,8 @@
                         clearInterval(id);
                         addExtra();
                         zr.delShape(lines);
-                        friendAnimation();
+//                        friendAnimation();
+                        showFriendHead();
                         return;
                     }
                     lineLengthCurrent++;
@@ -273,9 +302,9 @@
                 var rangeX = [], rangeY = [], rangeR = [];
                 var positionX = [], positionY = [], r = [];
                 for (i = 0; i < count; i++) {
-                    rangeX[i] = new Range(-friendRadius, friendRadius * 2);
-                    rangeY[i] = new Range(-friendRadius, friendRadius * 2);
-                    rangeR[i] = new Range(-friendRadius, friendRadius);
+                    rangeX[i] = new Range(-friendRadius, friendRadius);
+                    rangeY[i] = new Range(-friendRadius, friendRadius);
+                    rangeR[i] = new Range(-friendRadius / 2, friendRadius / 2);
                     positionX[i] = getFriendPositionX(i);
                     positionY[i] = getFriendPositionY(i);
                     r[i] = getRadius();
@@ -293,13 +322,55 @@
                 }, 10);
             }
 
+            function showFriendHead() {
+                if (count > config.maxImageFriendCount) {
+                    currentFriendShape = friends;
+                    return;
+                }
+                for (i = 0; i < 10; i++) {
+                    var x = getFriendPositionX(i);
+                    var y = getFriendPositionY(i);
+                    var r = getRadius();
+                    +function (i, x, y, r) {
+                        var friendImageShape = new ImageShape({
+                            rotation: [initRotationRadian(), centerX, centerY],
+                            zlevel: 5,
+                            style: {
+                                x: x - r,
+                                y: y - r,
+                                width: 2 * r,
+                                height: 2 * r,
+                                image: "64_1.jpg"
+                            },
+                            hoverable: false
+                        });
+                        var friendImage = new Group();
+                        friendImage.clipShape = {
+                            buildPath: function (ctx) {
+                                var x = friendImageShape.style.x, y = friendImageShape.style.y, r = friendImageShape.style.width / 2;
+                                if (i == 0)
+                                    console.log(x + ' ' + y + ' ' + r);
+                                ctx.arc(x + r, y + r, r, 0, Math.PI * 2, true);
+                            },
+                            updateTransform: function () {
+                            }
+                        };
+                        friendImage.addChild(friendImageShape);
+                        friendImages[i] = friendImage;
+                    }(i, x, y, r);
+                    zr.delShape(friends[i].id);
+                    zr.addShape(friendImages[i]);
+                }
+                currentFriendShape = friendImages;
+            }
+
             function selfClick() {
                 friendAnimationStop = true;
-                selfCircle.style.r = friendToShowRadius;
-                selfCircle.zlevel = 4;
+                selfCircleGroup.style.r = friendToShowRadius;
+                selfCircleGroup.zlevel = 4;
                 zr.modShape(friendToShowCircle);
                 zr.refresh();
-                zr.animate(selfCircle.id).when(1000, {
+                zr.animate(selfCircleGroup.id).when(1000, {
                     position: [friendCircleX - centerX, friendCircleY - centerY]
                 }).done(function () {
                     deleteAll();
@@ -358,23 +429,26 @@
                     selfNum = num;
                 }
                 for (i = 0; i < count; i++) {
-                    friends[i].style.color = friendColor;
-                    zr.modShape(friends[i]);
-                    zr.refresh();
-                    (function (i) {
-                        zr.animate(friends[i].id).when(300, {
+                    if (currentFriendShape[i] instanceof CircleShape) {
+                        friends[i].style.color = friendColor;
+                        zr.modShape(friends[i]);
+                        zr.refresh();
+                    }
+                    +function (i) {
+                        zr.animate(currentFriendShape[i].id).when(300, {
                             rotation: [rotateAngele(), centerX, centerY]
                         }).done(function () {
                             if (i == count - 1) {
-                                var n = getNum();
-//                                friendToShowCircle.style.text = n;
-                                friends[n].style.color = friendMainColor;
-                                zr.modShape(friends[n]);
+                                if (currentFriendShape[i] instanceof CircleShape) {
+                                    var n = getNum();
+                                    friends[n].style.color = friendMainColor;
+                                    zr.modShape(friends[n]);
+                                }
                                 addExtra();
                                 rotateFlag = false;
                             }
                         }).start();
-                    })(i);
+                    }(i);
                 }
             }
 
@@ -385,7 +459,7 @@
                 }
                 for (i = 0; i < count; i++) {
                     (function (i) {
-                        zr.animate(friends[i].id).when(200, {
+                        zr.animate(currentFriendShape[i].id).when(200, {
                             rotation: [rotateAngele() + bounceRadian, centerX, centerY]
                         }).when(500, {
                             rotation: [rotateAngele() - bounceRadian, centerX, centerY]
@@ -401,7 +475,7 @@
             }
 
             function addMain() {
-                zr.addShape(selfCircle);
+                zr.addShape(selfCircleGroup);
                 zr.addShape(selfCircleAround);
                 for (i = 0; i < count; i++) {
                     zr.addShape(lines[i]);
@@ -410,7 +484,7 @@
             }
 
             function deleteAll() {
-                zr.delShape(selfCircle);
+                zr.delShape(selfCircleGroup);
                 zr.delShape(selfCircleAround);
                 for (i = 0; i < count; i++) {
                     zr.delShape(lines[i]);
@@ -530,8 +604,11 @@
             function getFriendMainPositionY() {
                 return centerY - (lineLength * 2 + friendToShowRadius) * Math.sin(initRadian);
             }
-        }// end renderCanvas
-    }();
+        }
+
+        // end renderCanvas
+    }
+    ();
 </script>
 </body>
 </html>
