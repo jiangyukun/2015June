@@ -19,11 +19,12 @@
     require(
         [
             "zrender",
-            "zrender/animation/animation",
+            "zrender/animation/Animation",
             'zrender/shape/Circle',
+            'zrender/shape/Rectangle',
             'zrender/Group'
         ], 
-        function(zrender, Animation, CircleShape, Group){
+        function(zrender, Animation, CircleShape, RectangleShape, Group){
 
             // 初始化zrender
             var zr = zrender.init( document.getElementById("Main") );
@@ -52,6 +53,14 @@
             var group = new Group({
                 position : [100, 100]
             });
+            /*group.clipShape = new RectangleShape( {
+                style: {
+                    x: 0,
+                    y: 0,
+                    width: 20,
+                    height : 20
+                }
+            });*/
             group.addChild(circle);
             group.addChild(circle2);
             

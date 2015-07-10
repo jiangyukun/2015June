@@ -60,7 +60,7 @@
 
         var CIRCLE_RAD = 2 * Math.PI;
         var CLOCK_WISE = 1, ANTI_CLOCK_WISE = -1, BOUNCE = 2, BOUNCE_CLOCK_WISE = 3, BOUNCE_ANTI_CLOCK_WISE = 4;
-        var zr, Group, LineShape, CircleShape, CellularShape, DoubleArcAroundShape, TextShape, ImageShape, CircleImageShape;
+        var zr, Group, LineShape, CircleShape, CellularShape, DoubleArcAroundShape, TextShape, ImageShape;
         var width, height;
         var selfColor = 'rgba(92,187,255,0.8)', friendColor = 'rgba(220,161,119,0.8)', lineColor = 'rgba(220,161,119,0.3)', friendMainColor = '#49B5FF';
         var i, count, lines, friends, friendImages, currentFriendShape, cellular, cellulars, selfRadius = 25, lineLength, friendToShowRadius = 30;
@@ -70,7 +70,7 @@
         var rotateFlag, friendAnimationId, friendAnimationStop = false;
         var config = {
             maxImageFriendCount: 10,
-            count: 10
+            count: 8
         };
         require([
             'zrender',
@@ -82,8 +82,7 @@
             'zrender/shape/Cellular',
             'zrender/shape/DoubleArcAround',
             'zrender/shape/Text',
-            'zrender/shape/Image',
-            'zrender/shape/CircleImage'
+            'zrender/shape/Image'
         ], function (zrender) {
             Group = require('zrender/Group');
             LineShape = require('zrender/shape/Line');
@@ -92,7 +91,6 @@
             DoubleArcAroundShape = require('zrender/shape/DoubleArcAround');
             TextShape = require('zrender/shape/Text');
             ImageShape = require('zrender/shape/Image');
-            CircleImageShape = require('zrender/shape/CircleImage');
             zr = zrender.init(document.getElementById('face'));
             width = Math.ceil(zr.getWidth());
             height = Math.ceil(zr.getHeight());
@@ -118,14 +116,13 @@
             friendImages = [];
 
             var selfCircleGroup = new Group();
-            selfCircleGroup.clipShape = {
-                buildPath: function (ctx) {
-                    ctx.arc(centerX, centerY, selfRadius, 0, Math.PI * 2, true);
-                },
-                updateTransform: function () {
-                },
-                needTransform: true
-            };
+            selfCircleGroup.clipShape = new CircleShape({
+                style: {
+                    x: centerX,
+                    y: centerY,
+                    r: selfRadius
+                }
+            });
             selfCircleGroup.addChild(new ImageShape({
                 zlevel: 1,
                 style: {
@@ -166,7 +163,6 @@
                     },
                     hoverable: false
                 });
-
                 friends[i] = new CircleShape({
                     rotation: [initRotationRadian(), centerX, centerY],
                     zlevel: 5,
@@ -199,14 +195,14 @@
             var friendCircleY = getFriendMainPositionY();
 
             var friendToShowCircle = new Group();
-            selfCircleGroup.clipShape = {
-                buildPath: function (ctx) {
-                    ctx.arc(friendCircleX, friendCircleY, friendToShowRadius, 0, Math.PI * 2, true);
-                },
-                updateTransform: function () {
+            friendToShowCircle.clipShape = new CircleShape({
+                style: {
+                    x: friendCircleX,
+                    y: friendCircleY,
+                    r: friendToShowRadius
                 }
-            };
-            selfCircleGroup.addChild(new ImageShape({
+            });
+            friendToShowCircle.addChild(new ImageShape({
                 zlevel: 3,
                 style: {
                     x: friendCircleX - friendToShowRadius,
@@ -275,8 +271,8 @@
                         clearInterval(id);
                         addExtra();
                         zr.delShape(lines);
-//                        friendAnimation();
                         showFriendHead();
+                        friendAnimation();
                         return;
                     }
                     lineLengthCurrent++;
@@ -312,11 +308,13 @@
                 friendAnimationId = setInterval(function () {
                     if (rotateFlag || friendAnimationStop) return;
                     for (i = 0; i < count; i++) {
-                        var circle = friends[i];
-                        circle.style.x = positionX[i] + rangeX[i].get();
-                        circle.style.y = positionY[i] + rangeY[i].get();
-                        circle.style.r = r[i] + rangeR[i].get();
-                        zr.modShape(circle.id, circle);
+                        var circle = currentFriendShape[i];
+                        if (circle instanceof CircleShape) {
+                            circle.style.x = positionX[i] + rangeX[i].get();
+                            circle.style.y = positionY[i] + rangeY[i].get();
+                            circle.style.r = r[i] + rangeR[i].get();
+                            zr.modShape(circle.id, circle);
+                        }
                     }
                     zr.refresh();
                 }, 10);
@@ -327,7 +325,7 @@
                     currentFriendShape = friends;
                     return;
                 }
-                for (i = 0; i < 10; i++) {
+                for (i = 0; i < count; i++) {
                     var x = getFriendPositionX(i);
                     var y = getFriendPositionY(i);
                     var r = getRadius();
@@ -345,21 +343,18 @@
                             hoverable: false
                         });
                         var friendImage = new Group();
-                        friendImage.clipShape = {
-                            buildPath: function (ctx) {
-                                var x = friendImageShape.style.x, y = friendImageShape.style.y, r = friendImageShape.style.width / 2;
-                                if (i == 0)
-                                    console.log(x + ' ' + y + ' ' + r);
-                                ctx.arc(x + r, y + r, r, 0, Math.PI * 2, true);
-                            },
-                            updateTransform: function () {
+                        friendImage.clipShape = new CircleShape({
+                            style: {
+                                x: x,
+                                y: y,
+                                r: r
                             }
-                        };
+                        });
                         friendImage.addChild(friendImageShape);
                         friendImages[i] = friendImage;
                     }(i, x, y, r);
                     zr.delShape(friends[i].id);
-                    zr.addShape(friendImages[i]);
+                    zr.addGroup(friendImages[i]);
                 }
                 currentFriendShape = friendImages;
             }
@@ -375,7 +370,7 @@
                 }).done(function () {
                     deleteAll();
                     clearInterval(friendAnimationId);
-                    renderCanvas(zrender, {name: 'self', count: 10, data: []}, false, true);
+                    renderCanvas(zrender, {count: 10, data: []}, false, true);
                 }).start();
             }
 
@@ -475,7 +470,7 @@
             }
 
             function addMain() {
-                zr.addShape(selfCircleGroup);
+                zr.addGroup(selfCircleGroup);
                 zr.addShape(selfCircleAround);
                 for (i = 0; i < count; i++) {
                     zr.addShape(lines[i]);
@@ -484,7 +479,7 @@
             }
 
             function deleteAll() {
-                zr.delShape(selfCircleGroup);
+                zr.delGroup(selfCircleGroup);
                 zr.delShape(selfCircleAround);
                 for (i = 0; i < count; i++) {
                     zr.delShape(lines[i]);
@@ -496,7 +491,7 @@
             function deleteExtra() {
                 zr.delShape(cellulars);
                 zr.delShape(doubleArcAround);
-                zr.delShape(friendToShowCircle);
+                zr.delGroup(friendToShowCircle);
                 zr.delShape(friendName);
                 zr.delShape(friendReaderNumber);
                 zr.delShape(friendForwardNumber);
@@ -607,8 +602,7 @@
         }
 
         // end renderCanvas
-    }
-    ();
+    }();
 </script>
 </body>
 </html>
