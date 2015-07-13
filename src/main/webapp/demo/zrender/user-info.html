@@ -58,20 +58,30 @@
             ]
         });
 
-        var CIRCLE_RAD = 2 * Math.PI;
-        var CLOCK_WISE = 1, ANTI_CLOCK_WISE = -1, BOUNCE = 2, BOUNCE_CLOCK_WISE = 3, BOUNCE_ANTI_CLOCK_WISE = 4;
-        var zr, Group, LineShape, CircleShape, CellularShape, DoubleArcAroundShape, TextShape, ImageShape;
-        var width, height;
-        var selfColor = 'rgba(92,187,255,0.8)', friendColor = 'rgba(220,161,119,0.8)', lineColor = 'rgba(220,161,119,0.3)', friendMainColor = '#49B5FF';
-        var i, count, lines, friends, friendImages, currentFriendShape, cellular, cellulars, selfRadius = 25, lineLength, friendToShowRadius = 30;
-        var friendRadius, angleRad, centerX, centerY;
-        var selfNum = 0;
-        var initRadian = CIRCLE_RAD / 3;
-        var rotateFlag, friendAnimationId, friendAnimationStop = false;
+        var constants = {
+            CIRCLE_RAD: 2 * Math.PI,
+            CLOCK_WISE: 1,
+            ANTI_CLOCK_WISE: -1,
+            BOUNCE: 2,
+            BOUNCE_CLOCK_WISE: 3,
+            BOUNCE_ANTI_CLOCK_WISE: 4
+        };
+
         var config = {
             maxImageFriendCount: 10,
-            count: 8
+            count: 8,
+            initRadian: constants.CIRCLE_RAD / 3,
+            selfRadius: 25,
+            friendToShowRadius: 30,
+            selfColor: 'rgba(92,187,255,0.8)',
+            friendColor: 'rgba(220,161,119,0.8)',
+            lineColor: 'rgba(220,161,119,0.3)',
+            friendMainColor: '#49B5FF'
         };
+        var zr, Group, LineShape, CircleShape, CellularShape, DoubleArcAroundShape, TextShape, ImageShape;
+        var i, count, angleRad, lines, friends, imageFriends, currentFriendShape, cellular, cellulars, selfRadius = config.selfRadius, lineLength, friendToShowRadius = config.friendToShowRadius;
+        var width, height, friendRadius, centerX, centerY, selfNum = 0;
+        var rotateFlag, friendAnimationId, friendAnimationStop = false;
         require([
             'zrender',
             'zrender/Group',
@@ -95,25 +105,25 @@
             width = Math.ceil(zr.getWidth());
             height = Math.ceil(zr.getHeight());
             lineLength = parseInt(width / 4 < 80 ? width / 4 : 80);
-            renderCanvas(zrender, {name: 'self', count: config.count, data: []}, false, true);
+            renderCanvas(zrender, {name: 'self', count: config.count, data: []}, false);
         });
 
-        function renderCanvas(zrender, data, selfClickable, friendClickable) {
+        function renderCanvas(zrender, data, selfClickable) {
             var num, lineLengthCurrent = 30;
-            if (friendClickable) {
+            if (!selfClickable) {
                 num = selfNum;
             } else {
                 num = 0;
             }
             count = data.count;
-            friendRadius = Math.sin(CIRCLE_RAD / count / 3) * lineLength; // 朋友的半径（最小的圆）
-            angleRad = CIRCLE_RAD / count;
+            friendRadius = Math.sin(constants.CIRCLE_RAD / count / 3) * lineLength; // 朋友的半径（最小的圆）
+            angleRad = constants.CIRCLE_RAD / count;
             centerX = width / 2;
             centerY = lineLength * 3;
             lines = [];
             friends = [];
             cellulars = [];
-            friendImages = [];
+            imageFriends = [];
 
             var selfCircleGroup = new Group();
             selfCircleGroup.clipShape = new CircleShape({
@@ -143,7 +153,7 @@
                     y: centerY,
                     r: selfRadius + 2,
                     brushType: 'stroke',
-                    strokeColor: selfColor,
+                    strokeColor: config.selfColor,
                     lineWidth: 4
                 },
                 hoverable: false
@@ -158,7 +168,7 @@
                         yStart: getLineStartY(i),
                         xEnd: getFriendPositionX(i) - friendRadius,
                         yEnd: getFriendPositionY(i) - friendRadius,
-                        strokeColor: lineColor,
+                        strokeColor: config.lineColor,
                         lineWidth: 1
                     },
                     hoverable: false
@@ -171,19 +181,20 @@
                         y: getFriendPositionY(i),
                         r: getRadius(),
                         brushType: 'fill',
-                        color: i == num ? friendMainColor : friendColor
+                        color: i == num ? config.friendMainColor : config.friendColor
                     },
                     hoverable: false
                 });
             }
+            currentFriendShape = friends;
 
             for (i = 0; i < 5; i++) {
                 cellular = new CellularShape({
                     style: {
                         x: getCellularPositionX(),
                         y: getCellularPositionY(),
-                        angle: CIRCLE_RAD / 3,
-                        colorStyle: friendMainColor,
+                        angle: constants.CIRCLE_RAD / 3,
+                        colorStyle: config.friendMainColor,
                         borderWidth: (i + 3) / 2,
                         radius: 15 + i * 6
                     }
@@ -212,7 +223,7 @@
                     image: "64_1.jpg"
                 },
                 hoverable: false,
-                clickable: friendClickable,
+                clickable: !selfClickable,
                 onclick: friendClick
             }));
 
@@ -221,7 +232,7 @@
                     x: friendCircleX,
                     y: friendCircleY,
                     r: friendToShowRadius * 1.3,
-                    colorStyle: friendMainColor
+                    colorStyle: config.friendMainColor
                 }
             });
             var textPositionX = centerX;
@@ -295,12 +306,13 @@
             }
 
             function friendAnimation() {
-                var rangeX = [], rangeY = [], rangeR = [];
+                var rangeX = [], rangeY = [], rangeR = [], rangeScale = [];
                 var positionX = [], positionY = [], r = [];
                 for (i = 0; i < count; i++) {
-                    rangeX[i] = new Range(-friendRadius, friendRadius);
-                    rangeY[i] = new Range(-friendRadius, friendRadius);
+                    rangeX[i] = new Range(-friendRadius / 2, friendRadius / 2);
+                    rangeY[i] = new Range(-friendRadius / 2, friendRadius / 2);
                     rangeR[i] = new Range(-friendRadius / 2, friendRadius / 2);
+                    rangeScale[i] = new Range(0.5, 1.5);
                     positionX[i] = getFriendPositionX(i);
                     positionY[i] = getFriendPositionY(i);
                     r[i] = getRadius();
@@ -314,15 +326,21 @@
                             circle.style.y = positionY[i] + rangeY[i].get();
                             circle.style.r = r[i] + rangeR[i].get();
                             zr.modShape(circle.id, circle);
+                            zr.refresh();
+                        } else {
+                            var deltaX = rangeX[i].get(), deltaY = rangeY[i].get();
+                            var scale = rangeScale[i].get();
+                            zr.animate(circle.id).when(10, {
+                                position: [deltaX, deltaY]/*,
+                                 scale: [scale, scale, circle._children[0].style.x + deltaX, circle._children[0].style.y + deltaY]*/
+                            }).start();
                         }
                     }
-                    zr.refresh();
                 }, 10);
             }
 
             function showFriendHead() {
                 if (count > config.maxImageFriendCount) {
-                    currentFriendShape = friends;
                     return;
                 }
                 for (i = 0; i < count; i++) {
@@ -338,7 +356,7 @@
                                 y: y - r,
                                 width: 2 * r,
                                 height: 2 * r,
-                                image: "64_1.jpg"
+                                image: '64_1.jpg'
                             },
                             hoverable: false
                         });
@@ -351,66 +369,61 @@
                             }
                         });
                         friendImage.addChild(friendImageShape);
-                        friendImages[i] = friendImage;
+                        imageFriends[i] = friendImage;
                     }(i, x, y, r);
                     zr.delShape(friends[i].id);
-                    zr.addGroup(friendImages[i]);
+                    zr.addGroup(imageFriends[i]);
                 }
-                currentFriendShape = friendImages;
+                currentFriendShape = imageFriends;
             }
 
             function selfClick() {
                 friendAnimationStop = true;
-                selfCircleGroup.style.r = friendToShowRadius;
-                selfCircleGroup.zlevel = 4;
-                zr.modShape(friendToShowCircle);
-                zr.refresh();
                 zr.animate(selfCircleGroup.id).when(1000, {
                     position: [friendCircleX - centerX, friendCircleY - centerY]
                 }).done(function () {
                     deleteAll();
                     clearInterval(friendAnimationId);
-                    renderCanvas(zrender, {count: 10, data: []}, false, true);
+                    renderCanvas(zrender, {count: 10, data: []}, false);
                 }).start();
             }
 
             function friendClick() {
                 friendAnimationStop = true;
-                var id = setInterval(function () {
-                    if (friendToShowCircle.style.width < 0.1) {
-                        clearInterval(id);
-                    }
-                    friendToShowCircle.style.x *= 0.9;
-                    friendToShowCircle.style.y *= 0.9;
-                    friendToShowCircle.style.width *= 0.9;
-                    friendToShowCircle.style.height *= 0.9;
-                    zr.modShape(friendToShowCircle);
-                    zr.refresh();
-                }, 10);
-                /*zr.animate(friendToShowCircle.id).when(1000, {
-                 position: [centerX - friendCircleX, centerY - friendCircleY]
-                 }).done(function () {
-                 deleteAll();
-                 clearInterval(friendAnimationId);
-                 renderCanvas(zrender, {name: getNum(), count: 15, data: []}, true, false);
-                 }).start();*/
+                friendClickAnimation(friendToShowCircle.id);
+                for (i = 0; i < 5; i++) {
+                    friendClickAnimation(cellulars[i].id);
+                }
+                friendClickAnimation(currentFriendShape[getNum()]);
+                friendClickAnimation(doubleArcAround.id, true);
+            }
+
+            function friendClickAnimation(shapeId, done) {
+                zr.animate(shapeId).when(1000, {
+                    scale: [0, 0, centerX, centerY]
+                }).done(function () {
+                    if (!done) return;
+                    deleteAll();
+                    clearInterval(friendAnimationId);
+                    renderCanvas(zrender, {name: getNum(), count: 15, data: []}, true);
+                }).start();
             }
 
             function rotate(direction) {
                 if (rotateFlag || !direction) return;
                 rotateFlag = true;
                 switch (direction) {
-                    case CLOCK_WISE:
+                    case constants.CLOCK_WISE:
                         num--;
                         doRotate();
                         break;
-                    case ANTI_CLOCK_WISE:
+                    case constants.ANTI_CLOCK_WISE:
                         num++;
                         doRotate();
                         break;
-                    case BOUNCE:
-                    case BOUNCE_CLOCK_WISE:
-                    case BOUNCE_ANTI_CLOCK_WISE:
+                    case constants.BOUNCE:
+                    case constants.BOUNCE_CLOCK_WISE:
+                    case constants.BOUNCE_ANTI_CLOCK_WISE:
                         doBounce(direction);
                         break;
                     default:
@@ -420,12 +433,12 @@
 
             function doRotate() {
                 deleteExtra();
-                if (friendClickable) {
+                if (!selfClickable) {
                     selfNum = num;
                 }
                 for (i = 0; i < count; i++) {
                     if (currentFriendShape[i] instanceof CircleShape) {
-                        friends[i].style.color = friendColor;
+                        friends[i].style.color = config.friendColor;
                         zr.modShape(friends[i]);
                         zr.refresh();
                     }
@@ -436,7 +449,7 @@
                             if (i == count - 1) {
                                 if (currentFriendShape[i] instanceof CircleShape) {
                                     var n = getNum();
-                                    friends[n].style.color = friendMainColor;
+                                    friends[n].style.color = config.friendMainColor;
                                     zr.modShape(friends[n]);
                                 }
                                 addExtra();
@@ -449,7 +462,7 @@
 
             function doBounce(direction) {
                 var bounceRadian = angleRad / 5;
-                if (direction == BOUNCE_CLOCK_WISE) {
+                if (direction == constants.BOUNCE_CLOCK_WISE) {
                     bounceRadian = -bounceRadian;
                 }
                 for (i = 0; i < count; i++) {
@@ -483,7 +496,7 @@
                 zr.delShape(selfCircleAround);
                 for (i = 0; i < count; i++) {
                     zr.delShape(lines[i]);
-                    zr.delShape(friends[i]);
+                    zr.delShape(currentFriendShape[i]);
                 }
                 deleteExtra();
             }
@@ -546,9 +559,9 @@
                 var distance = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
                 var pointToLineDistance = area / distance;
                 if (Math.abs(pointToLineDistance) * 2 > lineLength && distance > 50) {
-                    rotate(pointToLineDistance < 0 ? CLOCK_WISE : ANTI_CLOCK_WISE);
+                    rotate(pointToLineDistance < 0 ? constants.CLOCK_WISE : constants.ANTI_CLOCK_WISE);
                 } else {
-                    rotate(pointToLineDistance < 0 ? BOUNCE_CLOCK_WISE : BOUNCE_ANTI_CLOCK_WISE);
+                    rotate(pointToLineDistance < 0 ? constants.BOUNCE_CLOCK_WISE : constants.BOUNCE_ANTI_CLOCK_WISE);
                 }
             });
 
@@ -569,39 +582,37 @@
             }
 
             function getCellularPositionX() {
-                return centerX + (lineLength + friendToShowRadius / 2) * Math.cos(initRadian);
+                return centerX + (lineLength + friendToShowRadius / 2) * Math.cos(config.initRadian);
             }
 
             function getCellularPositionY() {
-                return centerY - (lineLength + friendToShowRadius / 2) * Math.sin(initRadian);
+                return centerY - (lineLength + friendToShowRadius / 2) * Math.sin(config.initRadian);
             }
 
             function getLineStartX(n) {
-                return centerX + (selfRadius + 2) * Math.cos(angleRad * n + initRadian);
+                return centerX + (selfRadius + 2) * Math.cos(angleRad * n + config.initRadian);
             }
 
             function getLineStartY(n) {
-                return centerY - (selfRadius + 2) * Math.sin(angleRad * n + initRadian);
+                return centerY - (selfRadius + 2) * Math.sin(angleRad * n + config.initRadian);
             }
 
             function getFriendPositionX(n) {
-                return centerX + lineLengthCurrent * Math.cos(angleRad * n + initRadian);
+                return centerX + lineLengthCurrent * Math.cos(angleRad * n + config.initRadian);
             }
 
             function getFriendPositionY(n) {
-                return centerY - lineLengthCurrent * Math.sin(angleRad * n + initRadian);
+                return centerY - lineLengthCurrent * Math.sin(angleRad * n + config.initRadian);
             }
 
             function getFriendMainPositionX() {
-                return centerX + (lineLength * 2 + friendToShowRadius) * Math.cos(initRadian);
+                return centerX + (lineLength * 2 + friendToShowRadius) * Math.cos(config.initRadian);
             }
 
             function getFriendMainPositionY() {
-                return centerY - (lineLength * 2 + friendToShowRadius) * Math.sin(initRadian);
+                return centerY - (lineLength * 2 + friendToShowRadius) * Math.sin(config.initRadian);
             }
-        }
-
-        // end renderCanvas
+        } // end renderCanvas
     }();
 </script>
 </body>
