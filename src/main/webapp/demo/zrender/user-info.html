@@ -66,13 +66,12 @@
             BOUNCE_CLOCK_WISE: 3,
             BOUNCE_ANTI_CLOCK_WISE: 4
         };
-
         var config = {
             maxImageFriendCount: 10,
             friendCount: 8,
             initRadian: constants.CIRCLE_RAD / 3,
             selfRadius: 25,
-            friendToShowRadius: 30,
+            currentFriendRadius: 30,
             selfColor: 'rgba(92,187,255,0.8)',
             friendColor: 'rgba(220,161,119,0.8)',
             lineColor: 'rgba(220,161,119,0.3)',
@@ -80,7 +79,7 @@
         };
         var zr, Group, LineShape, CircleShape, CellularShape, DoubleArcAroundShape, TextShape, ImageShape;
         var i, friendCount, angleRad, lines, friends, imageFriends, currentFriendShape, cellular, cellulars,
-                selfRadius = config.selfRadius, lineLength, friendToShowRadius = config.friendToShowRadius;
+                selfRadius = config.selfRadius, lineLength, currentFriendRadius = config.currentFriendRadius;
         var width, height, friendRadius, centerX, centerY, friendIndex = 0;
         var rotateFlag, friendAnimationId, friendAnimationStop = false, imageHeadFlag;
         require([
@@ -213,16 +212,16 @@
                 style: {
                     x: friendCircleX,
                     y: friendCircleY,
-                    r: friendToShowRadius
+                    r: currentFriendRadius
                 }
             });
             friendToShowCircle.addChild(new ImageShape({
                 zlevel: 3,
                 style: {
-                    x: friendCircleX - friendToShowRadius,
-                    y: friendCircleY - friendToShowRadius,
-                    width: 2 * friendToShowRadius,
-                    height: 2 * friendToShowRadius,
+                    x: friendCircleX - currentFriendRadius,
+                    y: friendCircleY - currentFriendRadius,
+                    width: 2 * currentFriendRadius,
+                    height: 2 * currentFriendRadius,
                     image: "64_1.jpg"
                 },
                 hoverable: false,
@@ -234,7 +233,7 @@
                 style: {
                     x: friendCircleX,
                     y: friendCircleY,
-                    r: friendToShowRadius * 1.3,
+                    r: currentFriendRadius * 1.3,
                     colorStyle: config.friendMainColor
                 }
             });
@@ -360,8 +359,9 @@
                             },
                             hoverable: false
                         });
-                        var friendImage = new Group();
-                        friendImage.rotation = [initRotationRadian(), centerX, centerY];
+                        var friendImage = new Group({
+                            rotation: [initRotationRadian(), centerX, centerY]
+                        });
                         friendImage.clipShape = new CircleShape({
                             style: {
                                 x: x,
@@ -607,11 +607,11 @@
             }
 
             function getCellularPositionX() {
-                return centerX + (lineLength + friendToShowRadius / 2) * Math.cos(config.initRadian);
+                return centerX + (lineLength + currentFriendRadius / 2) * Math.cos(config.initRadian);
             }
 
             function getCellularPositionY() {
-                return centerY - (lineLength + friendToShowRadius / 2) * Math.sin(config.initRadian);
+                return centerY - (lineLength + currentFriendRadius / 2) * Math.sin(config.initRadian);
             }
 
             function getLineStartX(n) {
@@ -631,11 +631,11 @@
             }
 
             function getFriendMainPositionX() {
-                return centerX + (lineLength * 2 + friendToShowRadius) * Math.cos(config.initRadian);
+                return centerX + (lineLength * 2 + currentFriendRadius) * Math.cos(config.initRadian);
             }
 
             function getFriendMainPositionY() {
-                return centerY - (lineLength * 2 + friendToShowRadius) * Math.sin(config.initRadian);
+                return centerY - (lineLength * 2 + currentFriendRadius) * Math.sin(config.initRadian);
             }
 
             function getImageUrl(i) {
