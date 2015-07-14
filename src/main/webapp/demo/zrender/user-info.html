@@ -134,13 +134,10 @@
                 isImage = !(shapes[0] instanceof CircleShape);
             }
             function checkIndex(index) {
-                if (index < 0 || index >= shapes.length)
-                    throw new Error('');
+                if (index < 0 || index >= shapes.length) throw new Error('illegal index');
             }
 
             return {
-                shapes: shapes,
-                image: isImage,
                 isImage: function () {
                     return isImage;
                 },
@@ -148,14 +145,14 @@
                     return !isImage;
                 },
                 getRotation: function (index) {
-                    checkIndex();
+                    checkIndex(index);
                     return isImage ? shapes[index].childAt(0).rotation : shapes[index].rotation
                 },
                 getImageUrl: function () {
                     return isImage ? getCurrentFriendImageUrl() : '64.jpg';
                 },
                 get: function (index) {
-                    checkIndex();
+                    checkIndex(index);
                     return shapes[index];
                 }
             }
@@ -333,9 +330,9 @@
 
             // 初始化完成
             function renderComplete() {
-                var id = setInterval(function () {
+                var id = window.setInterval(function () {
                     if (lineLengthCurrent == lineLength) {
-                        clearInterval(id);
+                        window.clearInterval(id);
                         zr.delShape(lines);
                         showFriendHead();
                         addExtra();
@@ -373,7 +370,7 @@
                     positionY[i] = getFriendPositionY(i);
                     r[i] = getRadius();
                 }
-                friendAnimationId = setInterval(function () {
+                friendAnimationId = window.setInterval(function () {
                     if (rotateFlag || friendAnimationStop) return;
                     for (i = 0; i < friendCount; i++) {
                         var circle = friendShape.get(i);
@@ -447,7 +444,7 @@
                 }).done(function () {
                     if (!done) return;
                     deleteAll();
-                    clearInterval(friendAnimationId);
+                    window.clearInterval(friendAnimationId);
                     renderCanvas(zrender, {
                         name: 'self',
                         imageUrl: '64.jpg',
@@ -478,7 +475,7 @@
                 zr.animate(shapeId).when(1000, matrix).done(function () {
                     if (!done) return;
                     deleteAll();
-                    clearInterval(friendAnimationId);
+                    window.clearInterval(friendAnimationId);
                     renderCanvas(zrender, {
                         imageUrl: friendShape.getImageUrl(),
                         name: getNum(),
@@ -603,19 +600,19 @@
             }
 
             function addCellulars() {
-                setTimeout(function () {
+                window.setTimeout(function () {
                     zr.addShape(cellulars[0]);
                 }, 50);
-                setTimeout(function () {
+                window.setTimeout(function () {
                     zr.addShape(cellulars[1]);
                 }, 100);
-                setTimeout(function () {
+                window.setTimeout(function () {
                     zr.addShape(cellulars[2]);
                 }, 160);
-                setTimeout(function () {
+                window.setTimeout(function () {
                     zr.addShape(cellulars[3]);
                 }, 230);
-                setTimeout(function () {
+                window.setTimeout(function () {
                     zr.addShape(cellulars[4]);
                 }, 300);
             }
