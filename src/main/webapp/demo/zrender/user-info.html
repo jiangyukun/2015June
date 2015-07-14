@@ -81,7 +81,7 @@
         var test = {
             friendCount: 10
         };
-        var zr, Group, LineShape, CircleShape, CellularShape, DoubleArcAroundShape, TextShape, ImageShape;
+        var zr, LineShape, CircleShape, CellularShape, DoubleArcAroundShape, TextShape, ImageShape;
         var i, friendCount,// 好友数量
                 num,// 用于好友所在圆圈的旋转
                 lineLengthCurrent,// 开始时的动画
@@ -111,7 +111,6 @@
             'zrender/shape/Text',
             'zrender/shape/Image'
         ], function (zrender) {
-            Group = require('zrender/Group');
             LineShape = require('zrender/shape/Line');
             CircleShape = require('zrender/shape/Circle');
             CellularShape = require('zrender/shape/Cellular');
@@ -225,7 +224,7 @@
 
             var friendCircleX = getFriendMainPositionX();
             var friendCircleY = getFriendMainPositionY();
-            var friendToShowCircleGroup = new ImageShape({
+            var friendToShowCircle = new ImageShape({
                 zlevel: 3,
                 style: {
                     x: friendCircleX - currentFriendRadius,
@@ -424,7 +423,7 @@
 
             function friendClick() {
                 friendAnimationStop = true;
-                friendClickAnimation(friendToShowCircleGroup.id);
+                friendClickAnimation(friendToShowCircle.id);
                 for (i = 0; i < 5; i++) {
                     friendClickAnimation(cellulars[i].id);
                 }
@@ -549,7 +548,7 @@
             function deleteExtra() {
                 zr.delShape(cellulars);
                 zr.delShape(doubleArcAround);
-                zr.delGroup(friendToShowCircleGroup);
+                zr.delGroup(friendToShowCircle);
                 zr.delShape(friendName);
                 zr.delShape(friendReaderNumber);
                 zr.delShape(friendForwardNumber);
@@ -559,9 +558,9 @@
                 addCellulars();
                 zr.addShape(doubleArcAround);
                 if (friendShape.isImage()) {
-                    friendToShowCircleGroup.style.image = getCurrentFriendImageUrl();
+                    friendToShowCircle.style.image = getCurrentFriendImageUrl();
                 }
-                zr.addShape(friendToShowCircleGroup);
+                zr.addShape(friendToShowCircle);
                 friendName.style.text = '音乐小子' + getNum();
                 zr.addShape(friendName);
                 zr.addShape(friendReaderNumber);
