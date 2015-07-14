@@ -46,7 +46,7 @@
         }
     }
 
-    +function (window, Math) {
+    +function (window, Math, undefined) {
         'use strict';
 
         require.config({
@@ -89,7 +89,6 @@
                 lines,//好友与自身之间的线条
                 friends,// 好友
                 imageFriends,// 图片显示的好友
-                currentFriendShape,//图片或非图片
                 cellular,// 扇形
                 cellulars,//5个扇形组成的蜂窝形状
                 selfRadius = config.selfRadius,// 中心圆半径
@@ -99,8 +98,7 @@
         var rotateFlag,// 旋转标志
                 friendAnimationId,// 好友动画Id，
                 friendAnimationStop,// 暂停好友动画标志
-                friendShape,
-                imageHeadFlag;// 图片头像标志
+                friendShape;
         require([
             'zrender',
             'zrender/Group',
@@ -127,15 +125,38 @@
             renderCanvas(zrender, {name: 'self', imageUrl: '64.jpg', friendCount: test.friendCount, data: []}, false);
         });
 
-        function FriendShape(shape, isImage) {
+        function FriendShape(shapes, isImage) {
+            if (shapes && !shapes.length)
+                throw new Error('[shapes] must not be null and not empty');
             if (isImage && typeof isImage != 'boolean')
                 throw new Error('please provide [isImage] a boolean value');
-            if (!isImage) {
-                isImage = !(shape instanceof CircleShape);
+            if (isImage == undefined) {
+                isImage = !(shapes[0] instanceof CircleShape);
             }
+            function checkIndex(index) {
+                if (index < 0 || index >= shapes.length)
+                    throw new Error('');
+            }
+
             return {
+                shapes: shapes,
+                image: isImage,
                 isImage: function () {
                     return isImage;
+                },
+                isNotImage: function () {
+                    return !isImage;
+                },
+                getRotation: function (index) {
+                    checkIndex();
+                    return isImage ? shapes[index].childAt(0).rotation : shapes[index].rotation
+                },
+                getImageUrl: function () {
+                    return isImage ? getCurrentFriendImageUrl() : '64.jpg';
+                },
+                get: function (index) {
+                    checkIndex();
+                    return shapes[index];
                 }
             }
         }
@@ -148,7 +169,6 @@
                 num = 0;
             }
             friendCount = data.friendCount;
-            imageHeadFlag = (friendCount <= config.maxImageFriendCount);
             friendRadius = Math.sin(constants.CIRCLE_RAD / friendCount / 3) * lineLength; // 朋友的半径（最小的圆）
             friendRadius = friendRadius > 20 ? 20 : friendRadius;
             angleRad = constants.CIRCLE_RAD / friendCount;
@@ -224,8 +244,7 @@
                     hoverable: false
                 });
             }
-            currentFriendShape = friends;
-//            friendShape = new FriendShape(friends, false);
+            friendShape = new FriendShape(friends);
 
             for (i = 0; i < 5; i++) {
                 cellular = new CellularShape({
@@ -357,8 +376,8 @@
                 friendAnimationId = setInterval(function () {
                     if (rotateFlag || friendAnimationStop) return;
                     for (i = 0; i < friendCount; i++) {
-                        var circle = currentFriendShape[i];
-                        if (!imageHeadFlag) {
+                        var circle = friendShape.get(i);
+                        if (friendShape.isNotImage()) {
                             circle.style.x = positionX[i] + rangeX[i].get();
                             circle.style.y = positionY[i] + rangeY[i].get();
                             circle.style.r = r[i] + rangeR[i].get();
@@ -410,8 +429,7 @@
                     zr.delShape(friends[i].id);
                     zr.addGroup(imageFriends[i]);
                 }
-                currentFriendShape = imageFriends;
-//                friendShape = new FriendShape(friends, true);
+                friendShape = new FriendShape(imageFriends, true);
             }
 
             function selfClick() {
@@ -446,8 +464,8 @@
                     friendClickAnimation(cellulars[i].id);
                 }
                 friendClickAnimation(doubleArcAround.id);
-                var currentFriend = currentFriendShape[getNum()];
-                friendClickAnimation(currentFriend.id, true, imageHeadFlag ? currentFriend.childAt(0).rotation : currentFriend.rotation);
+                var currentFriend = friendShape.get(getNum());
+                friendClickAnimation(currentFriend.id, true, friendShape.getRotation(getNum()));
             }
 
             function friendClickAnimation(shapeId, done, rotation) {
@@ -462,7 +480,7 @@
                     deleteAll();
                     clearInterval(friendAnimationId);
                     renderCanvas(zrender, {
-                        imageUrl: imageHeadFlag ? getCurrentFriendImageUrl() : '64.jpg',
+                        imageUrl: friendShape.getImageUrl(),
                         name: getNum(),
                         friendCount: 6,
                         data: []
@@ -498,17 +516,17 @@
                     friendIndex = num;
                 }
                 for (i = 0; i < friendCount; i++) {
-                    if (!imageHeadFlag) {
+                    if (friendShape.isNotImage()) {
                         friends[i].style.color = config.friendColor;
                         zr.modShape(friends[i]);
                         zr.refresh();
                     }
                     +function (i) {
-                        zr.animate(currentFriendShape[i].id).when(300, {
+                        zr.animate(friendShape.get(i).id).when(300, {
                             rotation: [rotateAngele(), centerX, centerY]
                         }).done(function () {
                             if (i == friendCount - 1) {
-                                if (!imageHeadFlag) {
+                                if (friendShape.isNotImage()) {
                                     var n = getNum();
                                     friends[n].style.color = config.friendMainColor;
                                     zr.modShape(friends[n]);
@@ -528,7 +546,7 @@
                 }
                 for (i = 0; i < friendCount; i++) {
                     +function (i) {
-                        zr.animate(currentFriendShape[i].id).when(200, {
+                        zr.animate(friendShape.get(i).id).when(200, {
                             rotation: [rotateAngele() + bounceRadian, centerX, centerY]
                         }).when(500, {
                             rotation: [rotateAngele() - bounceRadian, centerX, centerY]
@@ -557,7 +575,7 @@
                 zr.delShape(selfCircleAround);
                 for (i = 0; i < friendCount; i++) {
                     zr.delShape(lines[i]);
-                    zr.delShape(currentFriendShape[i]);
+                    zr.delShape(friendShape.get(i));
                 }
                 deleteExtra();
             }
@@ -574,7 +592,7 @@
             function addExtra() {
                 addCellulars();
                 zr.addShape(doubleArcAround);
-                if (imageHeadFlag) {
+                if (friendShape.isImage()) {
                     friendToShowCircleGroup.childAt(0).style.image = getCurrentFriendImageUrl();
                 }
                 zr.addShape(friendToShowCircleGroup);
@@ -695,9 +713,9 @@
             }
 
             function getCurrentFriendImageUrl() {
-                if (!imageHeadFlag)
+                if (friendShape.isNotImage())
                     throw new Error('can not get image url from a not image shape');
-                return currentFriendShape[getNum()].childAt(0).style.image;
+                return friendShape.get(getNum()).childAt(0).style.image;
             }
         } // end renderCanvas
     }(window, Math);
