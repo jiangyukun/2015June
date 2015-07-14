@@ -9,7 +9,7 @@ define(
         };
 
         DoubleArcAround.prototype = {
-            type: 'cellular',
+            type: 'double-arc-around',
 
             buildPath: function (ctx, style) {
                 var i;
