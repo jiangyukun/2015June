@@ -22,6 +22,7 @@
 <div id='face'></div>
 <script src="doc/asset/js/jquery.js"></script>
 <script>
+    // 用于动画效果，给定一个区间，连续随机的变化
     function Range(start, end) {
         if (end < start) {
             throw new Error('end must bigger than start');
@@ -45,7 +46,7 @@
         }
     }
 
-    +function () {
+    +function (window, Math) {
         'use strict';
 
         require.config({
@@ -59,16 +60,16 @@
         });
 
         var constants = {
-            CIRCLE_RAD: 2 * Math.PI,
-            CLOCK_WISE: 1,
-            ANTI_CLOCK_WISE: -1,
-            BOUNCE: 2,
-            BOUNCE_CLOCK_WISE: 3,
-            BOUNCE_ANTI_CLOCK_WISE: 4
+            CIRCLE_RAD: 2 * Math.PI, //圆的弧度
+            CLOCK_WISE: 1, //顺时针方向
+            ANTI_CLOCK_WISE: -1, // 逆时针方向
+            BOUNCE: 2, // 反弹
+            BOUNCE_CLOCK_WISE: 3, // 顺时针反弹
+            BOUNCE_ANTI_CLOCK_WISE: 4 // 逆时针反弹
         };
         var config = {
-            maxImageFriendCount: 10,
-            friendCount: 8,
+            maxImageFriendCount: 10, // 显示好友头像最大好友数
+            minRotationDistance: 45, // 最小滑动距离，如果小于则显示反弹效果
             initRadian: constants.CIRCLE_RAD / 3,
             selfRadius: 25,
             currentFriendRadius: 30,
@@ -77,11 +78,29 @@
             lineColor: 'rgba(220,161,119,0.3)',
             friendMainColor: '#49B5FF'
         };
+        var test = {
+            friendCount: 15
+        };
         var zr, Group, LineShape, CircleShape, CellularShape, DoubleArcAroundShape, TextShape, ImageShape;
-        var i, friendCount, angleRad, lines, friends, imageFriends, currentFriendShape, cellular, cellulars,
-                selfRadius = config.selfRadius, lineLength, currentFriendRadius = config.currentFriendRadius;
+        var i, friendCount,// 好友数量
+                num,// 用于好友所在圆圈的旋转
+                lineLengthCurrent,// 开始时的动画
+                angleRad,//相邻2个好友之间的弧度
+                lines,//好友与自身之间的线条
+                friends,// 好友
+                imageFriends,// 图片显示的好友
+                currentFriendShape,//图片或非图片
+                cellular,// 扇形
+                cellulars,//5个扇形组成的蜂窝形状
+                selfRadius = config.selfRadius,// 中心圆半径
+                lineLength,// 线长度
+                currentFriendRadius = config.currentFriendRadius;//
         var width, height, friendRadius, centerX, centerY, friendIndex = 0;
-        var rotateFlag, friendAnimationId, friendAnimationStop = false, imageHeadFlag;
+        var rotateFlag,// 旋转标志
+                friendAnimationId,// 好友动画Id，
+                friendAnimationStop,// 暂停好友动画标志
+                friendShape,
+                imageHeadFlag;// 图片头像标志
         require([
             'zrender',
             'zrender/Group',
@@ -105,11 +124,24 @@
             width = Math.ceil(zr.getWidth());
             height = Math.ceil(zr.getHeight());
             lineLength = parseInt(width / 4 < 80 ? width / 4 : 80);
-            renderCanvas(zrender, {name: 'self', imageUrl: '64.jpg', friendCount: config.friendCount, data: []}, false);
+            renderCanvas(zrender, {name: 'self', imageUrl: '64.jpg', friendCount: test.friendCount, data: []}, false);
         });
 
-        function renderCanvas(zrender, data, selfClickable) {
-            var num, lineLengthCurrent = 30;
+        function FriendShape(shape, isImage) {
+            if (isImage && typeof isImage != 'boolean')
+                throw new Error('please provide [isImage] a boolean value');
+            if (!isImage) {
+                isImage = !(shape instanceof CircleShape);
+            }
+            return {
+                isImage: function () {
+                    return isImage;
+                }
+            }
+        }
+
+        function initData(data, selfClickable) {
+            lineLengthCurrent = 30;
             if (!selfClickable) {
                 num = friendIndex;
             } else {
@@ -126,7 +158,11 @@
             friends = [];
             cellulars = [];
             imageFriends = [];
+            friendAnimationStop = false;
+        }
 
+        function renderCanvas(zrender, data, selfClickable) {
+            initData(data, selfClickable);
             var selfCircleGroup = new Group();
             selfCircleGroup.clipShape = new CircleShape({
                 style: {
@@ -189,6 +225,7 @@
                 });
             }
             currentFriendShape = friends;
+//            friendShape = new FriendShape(friends, false);
 
             for (i = 0; i < 5; i++) {
                 cellular = new CellularShape({
@@ -206,16 +243,15 @@
 
             var friendCircleX = getFriendMainPositionX();
             var friendCircleY = getFriendMainPositionY();
-
-            var friendToShowCircle = new Group();
-            friendToShowCircle.clipShape = new CircleShape({
+            var friendToShowCircleGroup = new Group();
+            friendToShowCircleGroup.clipShape = new CircleShape({
                 style: {
                     x: friendCircleX,
                     y: friendCircleY,
                     r: currentFriendRadius
                 }
             });
-            friendToShowCircle.addChild(new ImageShape({
+            friendToShowCircleGroup.addChild(new ImageShape({
                 zlevel: 3,
                 style: {
                     x: friendCircleX - currentFriendRadius,
@@ -244,7 +280,7 @@
                 style: {
                     x: textPositionX,
                     y: textPositionY,
-                    text: '音乐小子',
+                    text: '',
                     color: '#323232',
                     textFont: 'normal 23px verdana',
                     textBaseline: 'top'
@@ -274,7 +310,6 @@
             });
 
             addMain();
-            friendAnimationStop = false;
             zr.render(renderComplete);
 
             // 初始化完成
@@ -323,7 +358,7 @@
                     if (rotateFlag || friendAnimationStop) return;
                     for (i = 0; i < friendCount; i++) {
                         var circle = currentFriendShape[i];
-                        if (circle instanceof CircleShape) {
+                        if (!imageHeadFlag) {
                             circle.style.x = positionX[i] + rangeX[i].get();
                             circle.style.y = positionY[i] + rangeY[i].get();
                             circle.style.r = r[i] + rangeR[i].get();
@@ -376,6 +411,7 @@
                     zr.addGroup(imageFriends[i]);
                 }
                 currentFriendShape = imageFriends;
+//                friendShape = new FriendShape(friends, true);
             }
 
             function selfClick() {
@@ -397,7 +433,7 @@
                     renderCanvas(zrender, {
                         name: 'self',
                         imageUrl: '64.jpg',
-                        friendCount: config.friendCount,
+                        friendCount: test.friendCount,
                         data: []
                     }, false);
                 }).start();
@@ -405,25 +441,28 @@
 
             function friendClick() {
                 friendAnimationStop = true;
-                friendClickAnimation(friendToShowCircle.id);
+                friendClickAnimation(friendToShowCircleGroup.id);
                 for (i = 0; i < 5; i++) {
                     friendClickAnimation(cellulars[i].id);
                 }
+                friendClickAnimation(doubleArcAround.id);
                 var currentFriend = currentFriendShape[getNum()];
-                friendClickAnimation(currentFriend.id);
-                friendClickAnimation(doubleArcAround.id, true);
+                friendClickAnimation(currentFriend.id, true, imageHeadFlag ? currentFriend.childAt(0).rotation : currentFriend.rotation);
             }
 
-            function friendClickAnimation(shapeId, done) {
-                zr.animate(shapeId).when(1000, {
-                    scale: [0, 0, centerX, centerY],
-                    rotation: [0, centerX, centerY]
-                }).done(function () {
+            function friendClickAnimation(shapeId, done, rotation) {
+                var matrix = {
+                    scale: [0, 0, centerX, centerY]
+                };
+                if (rotation) {
+                    matrix.rotation = rotation;
+                }
+                zr.animate(shapeId).when(1000, matrix).done(function () {
                     if (!done) return;
                     deleteAll();
                     clearInterval(friendAnimationId);
                     renderCanvas(zrender, {
-                        imageUrl: getCurrentFriendImageUrl(),
+                        imageUrl: imageHeadFlag ? getCurrentFriendImageUrl() : '64.jpg',
                         name: getNum(),
                         friendCount: 6,
                         data: []
@@ -526,7 +565,7 @@
             function deleteExtra() {
                 zr.delShape(cellulars);
                 zr.delShape(doubleArcAround);
-                zr.delGroup(friendToShowCircle);
+                zr.delGroup(friendToShowCircleGroup);
                 zr.delShape(friendName);
                 zr.delShape(friendReaderNumber);
                 zr.delShape(friendForwardNumber);
@@ -536,9 +575,10 @@
                 addCellulars();
                 zr.addShape(doubleArcAround);
                 if (imageHeadFlag) {
-                    friendToShowCircle.childAt(0).style.image = getCurrentFriendImageUrl();
+                    friendToShowCircleGroup.childAt(0).style.image = getCurrentFriendImageUrl();
                 }
-                zr.addShape(friendToShowCircle);
+                zr.addShape(friendToShowCircleGroup);
+                friendName.style.text = '音乐小子' + getNum();
                 zr.addShape(friendName);
                 zr.addShape(friendReaderNumber);
                 zr.addShape(friendForwardNumber);
@@ -580,10 +620,22 @@
                     return;
                 }
                 // 叉乘计算点到直线的距离
-                var area = ((centerX - startX) * (endY - startY) - (endX - startX) * (centerY - startY));
-                var distance = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
+                var line = {
+                    x: endX - startX,
+                    y: endY - startY
+                };
+                var vector1 = {
+                    x: centerX - startX,
+                    y: centerY - startY
+                };
+                var vector2 = {
+                    x: endX - startX,
+                    y: endY - startY
+                };
+                var area = (vector1.x * vector2.y - vector2.x * vector1.y);
+                var distance = Math.sqrt(Math.pow(line.x, 2) + Math.pow(line.y, 2));
                 var pointToLineDistance = area / distance;
-                if (Math.abs(pointToLineDistance) * 2 > lineLength && distance > 45) {
+                if (Math.abs(pointToLineDistance) * 2 > lineLength && distance > config.minRotationDistance) {
                     rotate(pointToLineDistance < 0 ? constants.CLOCK_WISE : constants.ANTI_CLOCK_WISE);
                 } else {
                     rotate(pointToLineDistance < 0 ? constants.BOUNCE_CLOCK_WISE : constants.BOUNCE_ANTI_CLOCK_WISE);
@@ -648,7 +700,7 @@
                 return currentFriendShape[getNum()].childAt(0).style.image;
             }
         } // end renderCanvas
-    }();
+    }(window, Math);
 </script>
 </body>
 </html>
