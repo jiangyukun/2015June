@@ -79,7 +79,7 @@
             friendMainColor: '#49B5FF'
         };
         var test = {
-            friendCount: 15
+            friendCount: 10
         };
         var zr, Group, LineShape, CircleShape, CellularShape, DoubleArcAroundShape, TextShape, ImageShape;
         var i, friendCount,// 好友数量
@@ -124,39 +124,6 @@
             lineLength = parseInt(width / 4 < 80 ? width / 4 : 80);
             renderCanvas(zrender, {name: 'self', imageUrl: '64.jpg', friendCount: test.friendCount, data: []}, false);
         });
-
-        function FriendShape(shapes, isImage) {
-            if (shapes && !shapes.length)
-                throw new Error('[shapes] must not be null and not empty');
-            if (isImage && typeof isImage != 'boolean')
-                throw new Error('please provide [isImage] a boolean value');
-            if (isImage == undefined) {
-                isImage = !(shapes[0] instanceof CircleShape);
-            }
-            function checkIndex(index) {
-                if (index < 0 || index >= shapes.length) throw new Error('illegal index');
-            }
-
-            return {
-                isImage: function () {
-                    return isImage;
-                },
-                isNotImage: function () {
-                    return !isImage;
-                },
-                getRotation: function (index) {
-                    checkIndex(index);
-                    return isImage ? shapes[index].childAt(0).rotation : shapes[index].rotation
-                },
-                getImageUrl: function () {
-                    return isImage ? getCurrentFriendImageUrl() : '64.jpg';
-                },
-                get: function (index) {
-                    checkIndex(index);
-                    return shapes[index];
-                }
-            }
-        }
 
         function initData(data, selfClickable) {
             lineLengthCurrent = 30;
@@ -656,6 +623,39 @@
                     rotate(pointToLineDistance < 0 ? constants.BOUNCE_CLOCK_WISE : constants.BOUNCE_ANTI_CLOCK_WISE);
                 }
             });
+
+            function FriendShape(shapes, isImage) {
+                if (shapes && !shapes.length)
+                    throw new Error('[shapes] must not be null and not empty');
+                if (isImage && typeof isImage != 'boolean')
+                    throw new Error('please provide [isImage] a boolean value');
+                if (isImage == undefined) {
+                    isImage = !(shapes[0] instanceof CircleShape);
+                }
+                function checkIndex(index) {
+                    if (index < 0 || index >= shapes.length) throw new Error('illegal index');
+                }
+
+                return {
+                    isImage: function () {
+                        return isImage;
+                    },
+                    isNotImage: function () {
+                        return !isImage;
+                    },
+                    getRotation: function (index) {
+                        checkIndex(index);
+                        return isImage ? shapes[index].childAt(0).rotation : shapes[index].rotation
+                    },
+                    getImageUrl: function () {
+                        return isImage ? getCurrentFriendImageUrl() : '64.jpg';
+                    },
+                    get: function (index) {
+                        checkIndex(index);
+                        return shapes[index];
+                    }
+                }
+            }
 
             function getRadius() {
                 return lineLengthCurrent * friendRadius / lineLength;

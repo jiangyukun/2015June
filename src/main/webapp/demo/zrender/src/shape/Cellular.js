@@ -24,7 +24,7 @@ define(
 
                 for (j = 0; j < borderWidth; j++) {
                     ctx.beginPath();
-                    ctx.arc(x, y, radius + j, angle + PI / 6, angle - PI / 6, true);
+                    ctx.arc(x, y, radius + j, angle + PI / 7, angle - PI / 7, true);
                     ctx.strokeStyle = colorStyle;
                     ctx.stroke();
                 }
