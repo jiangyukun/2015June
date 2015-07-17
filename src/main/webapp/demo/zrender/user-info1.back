@@ -1,105 +1,115 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>Canvas</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="esl.js"></script>
-    <style>
-        * {
-            padding: 0;
-            margin: 0;
-        }
-
-        #face {
-            border-bottom: 1px solid #aaa;
-            width: 100%;
-            height: 350px;
-        }
-    </style>
-</head>
-<body>
-<div id='face'></div>
-<script src="../../res/js/jquery.js"></script>
-<script>
-    // ç”¨äºåŠ¨ç”»æ•ˆæœï¼Œç»™å®šä¸€ä¸ªåŒºé—´ï¼Œè¿ç»­éšæœºçš„å˜åŒ–
-    function Range(start, end) {
+function FriendsInfo(callback) {
+    'use strict';
+    // ÓÃÓÚ¶¯»­Ğ§¹û£¬¸ø¶¨Ò»¸öÇø¼ä£¬Á¬ĞøËæ»úµÄ±ä»¯
+    function Range(start, end, delta) {
+        var beforeStart = null, beforeEnd = null, beforeDelta = null;
+        delta = delta || 0.02;
         if (end < start) {
             throw new Error('end must bigger than start');
         }
         var current = 0, before;
-        var r = Math.ceil(Math.random() * (end - start) + start);
+        var currentRandom = Math.ceil(Math.random() * (end - start) + start);
         return {
             get: function () {
-                if (Math.abs(r - current) < 0.01) {
-                    before = r;
-                    r = Math.ceil(Math.random() * (end - start) + start);
-                    current = before;
+                if (currentRandom < start) {
+                    currentRandom = start;
+                } else if (currentRandom > end) {
+                    currentRandom = end;
                 }
-                if (r > current) {
-                    current += 0.02;
+                if (Math.abs(currentRandom - current) < 0.01) {
+                    before = currentRandom;
+                    currentRandom = Math.ceil(Math.random() * (end - start) + start);
+                    current = before;
+                    if (beforeDelta)
+                        delta = beforeDelta;
+                }
+                if (currentRandom > current) {
+                    current += delta;
                 } else {
-                    current -= 0.02;
+                    current -= delta;
                 }
                 return current;
+            },
+            change: function (newStart, newEnd) {
+                beforeStart = start;
+                beforeEnd = end;
+                beforeDelta = delta;
+                start = newStart;
+                end = newEnd;
+            },
+            restore: function (newDelta) {
+                if (beforeStart == null || beforeEnd == null) {
+                    console.log('warn: unnecessary restore call');
+                    return;
+                }
+                start = beforeStart;
+                end = beforeEnd;
+                delta = newDelta;
+                beforeStart = beforeEnd = null;
             }
         }
     }
 
     +function (window, Math, undefined) {
-        'use strict';
-
+        var fileLocation = 'pages/report/js/canvas/zrender1';
         require.config({
-            packages: [
-                {
-                    name: 'zrender',
-                    location: 'src',
-                    main: 'zrender'
-                }
-            ]
+            paths: {
+                zrender: fileLocation,
+                'zrender/shape/Util': fileLocation,
+                'zrender/shape/Base': fileLocation,
+                'zrender/shape/Circle': fileLocation,
+                'zrender/shape/Text': fileLocation,
+                'zrender/shape/Line': fileLocation,
+                'zrender/shape/Image': fileLocation,
+                'zrender/shape/Cellular': fileLocation,
+                'zrender/shape/DoubleArcAround': fileLocation
+            }
         });
 
         var constants = {
-            CIRCLE_RAD: 2 * Math.PI, //åœ†çš„å¼§åº¦
-            CLOCK_WISE: 1, //é¡ºæ—¶é’ˆæ–¹å‘
-            ANTI_CLOCK_WISE: -1, // é€†æ—¶é’ˆæ–¹å‘
-            BOUNCE: 2, // åå¼¹
-            BOUNCE_CLOCK_WISE: 3, // é¡ºæ—¶é’ˆåå¼¹
-            BOUNCE_ANTI_CLOCK_WISE: 4 // é€†æ—¶é’ˆåå¼¹
+            CIRCLE_RAD: 2 * Math.PI, //Ô²µÄ»¡¶È
+            CLOCK_WISE: 1, //Ë³Ê±Õë·½Ïò
+            ANTI_CLOCK_WISE: -1, // ÄæÊ±Õë·½Ïò
+            BOUNCE: 2, // ·´µ¯
+            BOUNCE_CLOCK_WISE: 3, // Ë³Ê±Õë·´µ¯
+            BOUNCE_ANTI_CLOCK_WISE: 4 // ÄæÊ±Õë·´µ¯
         };
         var config = {
-            maxImageFriendCount: 10, // æ˜¾ç¤ºå¥½å‹å¤´åƒæœ€å¤§å¥½å‹æ•°
+            maxImageFriendCount: 10, // ÏÔÊ¾ºÃÓÑÍ·Ïñ×î´óºÃÓÑÊı
+            maxFriendRadius: 20,
             maxLineLength: 80,
-            minRotationDistance: 45, // æœ€å°æ»‘åŠ¨è·ç¦»ï¼Œå¦‚æœå°äºåˆ™æ˜¾ç¤ºåå¼¹æ•ˆæœ
+            minRotationDistance: 45, // ×îĞ¡»¬¶¯¾àÀë£¬Èç¹ûĞ¡ÓÚÔòÏÔÊ¾·´µ¯Ğ§¹û
             initRadian: constants.CIRCLE_RAD / 3,
             selfRadius: 25,
             currentFriendRadius: 30,
-            selfColor: 'rgba(92,187,255,0.8)',
-            friendColor: 'rgba(220,161,119,0.8)',
+            selfColor: 'rgba(106,205,240,0.8)',
+            friendColor: 'rgba(226,119,137,0.8)',
             lineColor: 'rgba(220,161,119,0.3)',
-            friendMainColor: '#49B5FF'
+            friendMainColor: 'rgba(91,187,255,0.8)',
+            extraColor: 'rgb(91,187,255)'
         };
         var zr, LineShape, CircleShape, CellularShape, DoubleArcAroundShape, TextShape, ImageShape;
-        var i, friendCount,// å¥½å‹æ•°é‡
-                num,// ç”¨äºå¥½å‹æ‰€åœ¨åœ†åœˆçš„æ—‹è½¬
-                lineLengthCurrent,// å¼€å§‹æ—¶çš„åŠ¨ç”»
-                angleRad,//ç›¸é‚»2ä¸ªå¥½å‹ä¹‹é—´çš„å¼§åº¦
-                lines,//å¥½å‹ä¸è‡ªèº«ä¹‹é—´çš„çº¿æ¡
-                friends,// å¥½å‹
-                imageFriends,// å›¾ç‰‡æ˜¾ç¤ºçš„å¥½å‹
-                cellular,// æ‰‡å½¢
-                cellulars,//5ä¸ªæ‰‡å½¢ç»„æˆçš„èœ‚çªå½¢çŠ¶
-                selfRadius = config.selfRadius,// ä¸­å¿ƒåœ†åŠå¾„
-                lineLength,// çº¿é•¿åº¦
-                currentFriendRadius = config.currentFriendRadius;//
+        var i, friendCount,// ºÃÓÑÊıÁ¿
+            num,// ÓÃÓÚºÃÓÑËùÔÚÔ²È¦µÄĞı×ª
+            lineLengthCurrent,// ¿ªÊ¼Ê±µÄ¶¯»­
+            angleRad,//ÏàÁÚ2¸öºÃÓÑÖ®¼äµÄ»¡¶È
+            lines,//ºÃÓÑÓë×ÔÉíÖ®¼äµÄÏßÌõ
+            friends,// ºÃÓÑ
+            imageFriends,// Í¼Æ¬ÏÔÊ¾µÄºÃÓÑ
+            cellular,// ÉÈĞÎ
+            cellulars,//5¸öÉÈĞÎ×é³ÉµÄ·äÎÑĞÎ×´
+            selfRadius = config.selfRadius,// ÖĞĞÄÔ²°ë¾¶
+            lineLength,// Ïß³¤¶È
+            currentFriendRadius = config.currentFriendRadius;//
         var width, height, friendRadius, centerX, centerY;
-        var rotateFlag,// æ—‹è½¬æ ‡å¿—
-                friendAnimationId,// å¥½å‹åŠ¨ç”»Idï¼Œ
-                friendAnimationStop,// æš‚åœå¥½å‹åŠ¨ç”»æ ‡å¿—
-                friendShape;
-        var deep = 0, // å¥½å‹å±‚çº§
-                deepInCurrent = [],
-                friendsData;
+        var rotateFlag,// Ğı×ª±êÖ¾
+            friendAnimationId,// ºÃÓÑ¶¯»­Id£¬
+            friendAnimationStop,// ÔİÍ£ºÃÓÑ¶¯»­±êÖ¾
+            friendShape, positionX, positionY;
+        var userId = null, deep = 0, // ºÃÓÑ²ã¼¶
+            deepInCurrent = [],
+            deepInUserId = [],
+            friendsData;
         require([
             'zrender',
             'zrender/shape/Line',
@@ -119,14 +129,15 @@
             width = Math.ceil(zr.getWidth());
             height = Math.ceil(zr.getHeight());
             lineLength = parseInt(width / 4 < config.maxLineLength ? width / 4 : config.maxLineLength);
-            fetchDataAndRender(deep);
+            fetchDataAndRender(userId);
         });
 
         function fetchDataAndRender(id) {
             $.ajax({
-                url: 'friends' + (id % 3) + '.json',
+                url: callback(id),
                 type: 'get',
                 success: function (data) {
+                    deepInUserId[deep] = data.id;
                     friendsData = data;
                     renderCanvas(data);
                 },
@@ -142,16 +153,17 @@
                 num = 0;
             }
             friendCount = data.friends.length;
-            friendRadius = Math.sin(constants.CIRCLE_RAD / friendCount / 3) * lineLength; // æœ‹å‹çš„åŠå¾„ï¼ˆæœ€å°çš„åœ†ï¼‰
-            friendRadius = friendRadius > 20 ? 20 : friendRadius;
+            friendRadius = (friendCount == 0 ? config.maxFriendRadius : Math.sin(constants.CIRCLE_RAD / friendCount / 3) * lineLength);
+            friendRadius = friendRadius > config.maxFriendRadius ? config.maxFriendRadius : friendRadius;
             angleRad = constants.CIRCLE_RAD / friendCount;
             centerX = width / 2;
-            centerY = lineLength * 3;
+            centerY = lineLength * 3 - 8;
             lines = [];
             friends = [];
             cellulars = [];
             imageFriends = [];
             friendAnimationStop = false;
+            rotateFlag = false;
         }
 
         function renderCanvas(data) {
@@ -211,7 +223,7 @@
                         y: getFriendPositionY(i),
                         r: getRadius(),
                         brushType: 'fill',
-                        color: i == num ? config.friendMainColor : config.friendColor
+                        color: i == getNum() ? config.friendMainColor : config.friendColor
                     },
                     hoverable: false
                 });
@@ -224,7 +236,7 @@
                         x: getCellularPositionX(),
                         y: getCellularPositionY(),
                         angle: constants.CIRCLE_RAD / 3,
-                        colorStyle: config.friendMainColor,
+                        colorStyle: config.extraColor,
                         borderWidth: (i + 3) / 2,
                         radius: 15 + i * 6
                     }
@@ -241,7 +253,7 @@
                     y: friendCircleY - currentFriendRadius,
                     width: 2 * currentFriendRadius,
                     height: 2 * currentFriendRadius,
-                    image: "64_1.jpg"
+                    image: ''
                 },
                 hoverable: false,
                 clickable: true,
@@ -260,12 +272,21 @@
                     x: friendCircleX,
                     y: friendCircleY,
                     r: currentFriendRadius * 1.3,
-                    colorStyle: config.friendMainColor
+                    colorStyle: config.extraColor
                 }
             });
             var textPositionX = centerX;
             var textPositionY = centerY - lineLength * 2.6;
-            // åç§°
+            var sex = new ImageShape({
+                style: {
+                    x: textPositionX - 20,
+                    y: textPositionY + 10,
+                    width: 12,
+                    height: 12,
+                    image: ''
+                }
+            });
+            // Ãû³Æ
             var friendName = new TextShape({
                 style: {
                     x: textPositionX,
@@ -274,27 +295,62 @@
                     color: '#323232',
                     textFont: 'normal 23px verdana',
                     textBaseline: 'top'
-                }
+                },
+                hoverable: false
             });
-            // é˜…è¯»äººæ•°
+            var city = new TextShape({
+                style: {
+                    x: textPositionX,
+                    y: textPositionY + 30,
+                    text: '',
+                    color: '#666666',
+                    textFont: 'normal 16px verdana',
+                    textBaseline: 'top'
+                },
+                hoverable: false
+            });
+            // ÔÄ¶ÁÈËÊı
             var friendReaderNumber = new TextShape({
                 style: {
                     x: textPositionX,
-                    y: textPositionY + 36,
+                    y: textPositionY + 55,
                     color: '#666666',
-                    text: 'é˜…è¯»äººæ•°  109',
+                    text: '',
                     textFont: 'normal 16px verdana',
                     textBaseline: 'top'
-                }
+                },
+                hoverable: false
             });
-            // è½¬å‘äººæ•°
+            // ×ª·¢ÈËÊı
             var friendForwardNumber = new TextShape({
                 style: {
                     x: textPositionX,
-                    y: textPositionY + 60,
+                    y: textPositionY + 75,
                     color: '#666666',
-                    text: 'è½¬å‘äººæ•°  46',
+                    text: '',
                     textFont: 'normal 16px verdana',
+                    textBaseline: 'top'
+                },
+                hoverable: false
+            });
+            var backTip = new ImageShape({
+                style: {
+                    x: centerX + lineLength,
+                    y: centerY - lineLength * 1.3,
+                    width: 75,
+                    height: 75,
+                    image: 'pages/report/images/back.png'
+                },
+                clickable: true,
+                onclick: backTipClick
+            });
+            var emptyTip = new TextShape({
+                style: {
+                    x: friendCircleX,
+                    y: centerY - lineLength * 1.2,
+                    text: 'ÎŞ×ª·¢Êı',
+                    color: '#323232',
+                    textFont: 'normal 23px verdana',
                     textBaseline: 'top'
                 }
             });
@@ -302,15 +358,19 @@
             addMain();
             zr.render(renderComplete);
 
-            // åˆå§‹åŒ–å®Œæˆ
+            // ³õÊ¼»¯Íê³É
             function renderComplete() {
                 var id = window.setInterval(function () {
                     if (lineLengthCurrent == lineLength) {
                         window.clearInterval(id);
                         zr.delShape(lines);
-                        showFriendHead();
-                        addExtra();
-                        friendAnimation();
+                        if (friendCount != 0) {
+                            //showFriendHead();
+                            addExtra();
+                            friendAnimation();
+                        }
+                        addBackTip();
+                        addEmptyTip();
                         return;
                     }
                     lineLengthCurrent++;
@@ -320,38 +380,47 @@
                         var friendCenterY = getFriendPositionY(i);
                         line.style.xEnd = friendCenterX;
                         line.style.yEnd = friendCenterY;
-                        zr.modShape(line.id, line);
+                        zr.modShape(line);
 
                         var circle = friends[i];
                         circle.style.x = friendCenterX;
                         circle.style.y = friendCenterY;
                         circle.style.r = getRadius();
-                        zr.modShape(circle.id, circle);
+                        zr.modShape(circle);
                     }
                     zr.refresh();
                 }, 10);
             }
 
             function friendAnimation() {
-                var rangeX = [], rangeY = [], rangeR = [], rangeScale = [];
-                var positionX = [], positionY = [], r = [];
+                var rangeX = [], rangeY = [], rangeR = [];
+                var r = [];
+                var before;
                 for (i = 0; i < friendCount; i++) {
                     rangeX[i] = new Range(-friendRadius / 3, friendRadius / 3);
                     rangeY[i] = new Range(-friendRadius / 3, friendRadius / 3);
-                    rangeR[i] = new Range(-friendRadius / 3, friendRadius / 3);
-                    rangeScale[i] = new Range(0.5, 1.5);
-                    positionX[i] = getFriendPositionX(i);
-                    positionY[i] = getFriendPositionY(i);
+                    rangeR[i] = new Range(-friendRadius / 3, 0);
                     r[i] = getRadius();
                 }
+                refreshPosition();
                 friendAnimationId = window.setInterval(function () {
                     if (rotateFlag || friendAnimationStop) return;
+                    var current = getNum();
                     for (i = 0; i < friendCount; i++) {
                         var circle = friendShape.get(i);
+                        if (current != before) {
+                            if (current == i) {
+                                //console.log('change...' + i);
+                                rangeR[i].change(0, r[i] / 3);
+                                if (before != undefined) {
+                                    //console.log('restore...' + before);
+                                    rangeR[before].restore(0.1);
+                                }
+                            }
+                        }
                         var newX = positionX[i] + rangeX[i].get();
                         var newY = positionY[i] + rangeY[i].get();
                         var newR = r[i] + rangeR[i].get();
-
                         if (friendShape.isImage()) {
                             circle.style.x = newX - newR;
                             circle.style.y = newY - newR;
@@ -367,8 +436,18 @@
                         }
                         zr.modShape(circle);
                     }
+                    before = current;
                     zr.refresh();
                 }, 10);
+            }
+
+            function refreshPosition() {
+                positionX = [];
+                positionY = [];
+                for (i = 0; i < friendCount; i++) {
+                    positionX[i] = getFriendPositionX(i);
+                    positionY[i] = getFriendPositionY(i);
+                }
             }
 
             function showFriendHead() {
@@ -421,7 +500,7 @@
                     deleteAll();
                     window.clearInterval(friendAnimationId);
                     deep--;
-                    fetchDataAndRender(deep);
+                    fetchDataAndRender(deepInUserId[deep]);
                 }).start();
             }
 
@@ -446,8 +525,15 @@
                     deleteAll();
                     window.clearInterval(friendAnimationId);
                     deep++;
-                    fetchDataAndRender(deep);
+                    fetchDataAndRender(friendsData.friends[getNum()].id);
                 }).start();
+            }
+
+            function backTipClick() {
+                deleteAll();
+                window.clearInterval(friendAnimationId);
+                deep = 0;
+                fetchDataAndRender(deepInUserId[deep]);
             }
 
             function rotate(direction) {
@@ -493,6 +579,7 @@
                                 }
                                 addExtra();
                                 rotateFlag = false;
+                                refreshPosition();
                             }
                         }).start();
                     }(i);
@@ -538,26 +625,69 @@
                     zr.delShape(friendShape.get(i));
                 }
                 deleteExtra();
+                deleteBackTip();
+                deleteEmptyTip();
             }
 
             function deleteExtra() {
                 zr.delShape(cellulars);
                 zr.delShape(doubleArcAround);
                 zr.delGroup(friendToShowCircle);
+                zr.delShape(sex);
                 zr.delShape(friendName);
+                zr.delShape(city);
                 zr.delShape(friendReaderNumber);
                 zr.delShape(friendForwardNumber);
             }
 
             function addExtra() {
+                var friend = friendsData.friends[getNum()];
                 addCellulars();
                 zr.addShape(doubleArcAround);
                 friendToShowCircle.style.image = getImageUrl(getNum());
                 zr.addShape(friendToShowCircle);
-                friendName.style.text = friendsData.friends[getNum()].name;
+                if (friend.sex != '2') {
+                    sex.style.image = 'pages/report/images/male.png';
+                } else {
+                    sex.style.image = 'pages/report/images/female.png';
+                }
+                zr.addShape(sex);
+                friendName.style.text = friend.name;
                 zr.addShape(friendName);
+                var region = friend.province + friend.city;
+                if (region) {
+                    city.style.text = region;
+                }
+                else {
+                    city.style.text = 'ÇøÓòÎ´Öª';
+                }
+                zr.addShape(city);
+                friendReaderNumber.style.text = 'ÔÄ¶ÁÈËÊı  ' + friend.read || 0;
                 zr.addShape(friendReaderNumber);
+                friendForwardNumber.style.text = '×ª·¢ÈËÊı  ' + friend.transmit || 0;
                 zr.addShape(friendForwardNumber);
+            }
+
+            function addBackTip() {
+                if (deep) {
+                    zr.addShape(backTip);
+                }
+            }
+
+            function deleteBackTip() {
+                if (deep) {
+                    zr.delShape(backTip);
+                }
+            }
+
+            function addEmptyTip() {
+                if (friendCount == 0)
+                    zr.addShape(emptyTip);
+            }
+
+            function deleteEmptyTip() {
+                if (friendCount == 0)
+                    zr.delShape(emptyTip);
             }
 
             function addCellulars() {
@@ -576,24 +706,33 @@
                 }, 140);
             }
 
-            // äº‹ä»¶å¤„ç†
-            var startX, startY;
-            var endX, endY;
+            // ÊÂ¼ş´¦Àí
+            var startX, startY, endX, endY, handOrSkip, hand = 1, skip = 2;
             $('#face').off().on('touchstart', function ($event) {
                 var touch = $event.originalEvent.touches[0];
                 startX = touch.clientX;
                 startY = touch.clientY;
                 endX = endY = -1;
+                handOrSkip = 0;
             }).on('touchmove', function ($event) {
                 var touch = $event.originalEvent.touches[0];
                 endX = touch.clientX;
                 endY = touch.clientY;
-                return false;
+                if (handOrSkip == skip) return;
+                if (handOrSkip == hand) {
+                    return false;
+                }
+                if (Math.abs(endX - centerX) > 30) {
+                    handOrSkip = hand;
+                    return false;
+                } else {
+                    handOrSkip = skip;
+                }
             }).on('touchend', function () {
-                if (endX == -1 && endY == -1) {
+                if (handOrSkip != hand) {
                     return;
                 }
-                // å‰ä¹˜è®¡ç®—ç‚¹åˆ°ç›´çº¿çš„è·ç¦»
+                // ²æ³Ë¼ÆËãµãµ½Ö±ÏßµÄ¾àÀë
                 var line = {
                     x: endX - startX,
                     y: endY - startY
@@ -617,8 +756,8 @@
             });
 
             function FriendShape(shapes, isImage) {
-                if (shapes && !shapes.length)
-                    throw new Error('[shapes] must not be null and not empty');
+                if (!shapes)
+                    throw new Error('[shapes] must not be null');
                 if (isImage && typeof isImage != 'boolean')
                     throw new Error('please provide [isImage] a boolean value');
                 if (isImage == undefined) {
@@ -695,6 +834,4 @@
             }
         } // end renderCanvas
     }(window, Math);
-</script>
-</body>
-</html>
+}

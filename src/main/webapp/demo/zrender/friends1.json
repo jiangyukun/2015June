@@ -1,0 +1,24 @@
+{
+  "id": "002",
+  "name": "成本",
+  "imageUrl": "http://wx.qlogo.cn/mmopen/Q3auHgzwzM4aX5xgyNH6oKbxoj0Thcy6GTK6GQ0mMjB1o4sSIItzbS0PV5mzHUBjFs9LgictvGyibiczVgDYYBkxcO5Lrne1fFWcSMrOPpIMpk/64",
+  "read": "",
+  "transmit": "",
+  "friends": [
+    {
+      "id": "007",
+      "name": "建国后",
+      "imageUrl": "http://wx.qlogo.cn/mmopen/nPtFXCia8icicYyQyrBd9biarysH4WXBSYNQdwYIUAxyClJtibicyksTVBXiapDeHVSibeMqMT4kvia114N9QqM69zKfbZx7WiaI6mBkrn/64"
+    },
+    {
+      "id": "008",
+      "name": "CVC",
+      "imageUrl": "http://wx.qlogo.cn/mmopen/qKTZ8khBn96x1cWqqlG19MEueEqjp0opRnSZWebbLOk5OoX0cVPm8nWBVliayTgIM3WribYXPKLic9Mz5TPkZEZIUoiaBZzuUydM/64"
+    },
+    {
+      "id": "009",
+      "name": "cv不会一天",
+      "imageUrl": "http://wx.qlogo.cn/mmopen/qE9MKluetOkAa0jCjzOAyFyQ9FjSeMeibUTYch4jibzFtdWDptTZBbaOS5s2flVoaNYa78sic9XkGPW9k97RH2vqLEPNkUW7c8U/64"
+    }
+  ]
+}

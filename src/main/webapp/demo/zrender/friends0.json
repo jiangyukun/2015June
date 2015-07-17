@@ -1,0 +1,58 @@
+{
+  "id": "001",
+  "name": "是的",
+  "imageUrl": "http://wx.qlogo.cn/mmopen/nPtFXCia8icicbXgjiatIGkwnhQhZbdjibeGbc52a7Iia1juMCHs2ueKHsYdG2kJmsN5WN8mTWzha7xV7m8owJxo5NTjARqlGVPbia1/64",
+  "read": "",
+  "transmit": "",
+  "friends": [
+    {
+      "id": "002",
+      "name": "成本",
+      "imageUrl": "http://wx.qlogo.cn/mmopen/Q3auHgzwzM4aX5xgyNH6oKbxoj0Thcy6GTK6GQ0mMjB1o4sSIItzbS0PV5mzHUBjFs9LgictvGyibiczVgDYYBkxcO5Lrne1fFWcSMrOPpIMpk/64",
+      "read": "",
+      "transmit": ""
+    },
+    {
+      "id": "003",
+      "name": "成功",
+      "imageUrl": "http://wx.qlogo.cn/mmopen/nPtFXCia8icicZtVUmOW9dPleT3zwdtI5GBLnXpdofV4zJDkcyRlCoYhAPBccaiaYLMejOhgxyoibricVrgpP5MEvL9FpkhcfEEPvA/64",
+      "read": "",
+      "transmit": ""
+    },
+    {
+      "id": "004",
+      "name": "不吃",
+      "imageUrl": "http://wx.qlogo.cn/mmopen/Q3auHgzwzM46WXp2chhfCsJGkj8apfj3uhuo3EYuo3302lwUMBpsSe5NrF6e5rWq0P3Tn6dZbMcUcgHKZSalppczKPyxib2s8d2gC4nqm5iac/64",
+      "read": "",
+      "transmit": ""
+    },
+    {
+      "id": "005",
+      "name": "有录音",
+      "imageUrl": "http://wx.qlogo.cn/mmopen/qE9MKluetOkAa0jCjzOAyGH2hBSv4Z2gKQmV6mzZq8WUNPjwKyLOGzZLWcsbJvgEYIIkZbibIqrjrCu2WicBicCycJuN9iaW7ic8x/64",
+      "read": "",
+      "transmit": ""
+    },
+    {
+      "id": "006",
+      "name": "仄哥",
+      "imageUrl": "http://wx.qlogo.cn/mmopen/nPtFXCia8icicaicaiaUSLkfRrtVaQ2zFa8BiaWzmgYd8j9wGzMMAtpiafKqEUXvnOj0wiacA6S28KuvY68UL9XsBQSlKpz4moIicwSibI/64",
+      "read": "",
+      "transmit": ""
+    },
+    {
+      "id": "006",
+      "name": "仄哥",
+      "imageUrl": "http://wx.qlogo.cn/mmopen/nPtFXCia8icicaicaiaUSLkfRrtVaQ2zFa8BiaWzmgYd8j9wGzMMAtpiafKqEUXvnOj0wiacA6S28KuvY68UL9XsBQSlKpz4moIicwSibI/64",
+      "read": "",
+      "transmit": ""
+    },
+    {
+      "id": "006",
+      "name": "仄哥",
+      "imageUrl": "http://wx.qlogo.cn/mmopen/nPtFXCia8icicaicaiaUSLkfRrtVaQ2zFa8BiaWzmgYd8j9wGzMMAtpiafKqEUXvnOj0wiacA6S28KuvY68UL9XsBQSlKpz4moIicwSibI/64",
+      "read": "",
+      "transmit": ""
+    }
+  ]
+}
